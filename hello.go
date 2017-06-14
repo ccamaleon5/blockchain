@@ -10,12 +10,30 @@ import (
 	"strconv"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	"github.com/satori/go.uuid"
+
+	"crypto/rand"
+	"encoding/hex"
+	//"github.com/satori/go.uuid"
 )
+
+// UUID layout variants.
+const (
+	VariantNCS = iota
+	VariantRFC4122
+	VariantMicrosoft
+	VariantFuture
+)
+
+// Used in string method conversion
+const dash byte = '-'
+
+// UUID representation compliant with specification
+// described in RFC 4122.
+type UUID [16]byte
 
 //Wallet - Structure for products used in buy goods
 type Wallet struct {
-	Id       uuid.UUID    `json:"id"`
+	Id       UUID    `json:"id"`
 	Name     string  `json:"name"`
 	Lastname string  `json:"lastname"`
 	Amount   float64 `json:"amount"`
@@ -88,16 +106,16 @@ func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []
 	if len(args) != 3 {
 		return nil, errors.New("Numero incorrecto de argumentos.Se espera 3 para createWallet")
 	}
-	
-	u1 := uuid.NewV4()
+
+	u1 := NewV4()
 	fmt.Printf("UUIDv4: %s\n", u1)
 	amt, err := strconv.ParseFloat(args[2], 64)
 
 	wallet := Wallet{
-		Id:        u1,			
-		Name:      args[0],
-		Lastname:  args[1],
-		Amount:    amt,
+		Id:       u1,
+		Name:     args[0],
+		Lastname: args[1],
+		Amount:   amt,
 	}
 
 	bytes, err := json.Marshal(wallet)
@@ -145,8 +163,8 @@ func (t *SimpleChaincode) addProduct(stub shim.ChaincodeStubInterface, args []st
 		Owner:     args[2],
 		Productid: args[3],
 	}*/
-	
-	amt=amt+1
+
+	amt = amt + 1
 
 	//bytes, err := json.Marshal(product)
 	if err != nil {
@@ -195,3 +213,62 @@ func (t *SimpleChaincode) getBalance(stub shim.ChaincodeStubInterface, args []st
 	return bytes, nil
 }
 
+func safeRandom(dest []byte) {
+	if _, err := rand.Read(dest); err != nil {
+		panic(err)
+	}
+}
+
+// SetVersion sets version bits.
+func (u *UUID) SetVersion(v byte) {
+	u[6] = (u[6] & 0x0f) | (v << 4)
+}
+
+// SetVariant sets variant bits as described in RFC 4122.
+func (u *UUID) SetVariant() {
+	u[8] = (u[8] & 0xbf) | 0x80
+}
+
+func (u UUID) Version() uint {
+	return uint(u[6] >> 4)
+}
+
+// Variant returns UUID layout variant.
+func (u UUID) Variant() uint {
+	switch {
+	case (u[8] & 0x80) == 0x00:
+		return VariantNCS
+	case (u[8]&0xc0)|0x80 == 0x80:
+		return VariantRFC4122
+	case (u[8]&0xe0)|0xc0 == 0xc0:
+		return VariantMicrosoft
+	}
+	return VariantFuture
+}
+
+// Returns canonical string representation of UUID:
+// xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.
+func (u UUID) String() string {
+	buf := make([]byte, 36)
+
+	hex.Encode(buf[0:8], u[0:4])
+	buf[8] = dash
+	hex.Encode(buf[9:13], u[4:6])
+	buf[13] = dash
+	hex.Encode(buf[14:18], u[6:8])
+	buf[18] = dash
+	hex.Encode(buf[19:23], u[8:10])
+	buf[23] = dash
+	hex.Encode(buf[24:], u[10:])
+
+	return string(buf)
+}
+
+func NewV4() UUID {
+	u := UUID{}
+	safeRandom(u[:])
+	u.SetVersion(4)
+	u.SetVariant()
+
+	return u
+}
