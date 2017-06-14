@@ -1,3 +1,6 @@
+/*
+* Adrian Pareja
+ */
 package main
 
 import (
@@ -5,17 +8,17 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
+	"github.com/satori/go.uuid"
 )
 
-//Product - Structure for products used in buy goods
-type Product struct {
-	Name   string  `json:"name"`
-	Amount float64 `json:"amount"`
-	Owner string  `json:"owner"`
-	Productid string     `json:"productid"`
+//Wallet - Structure for products used in buy goods
+type Wallet struct {
+	Id       uuid.UUID    `json:"id"`
+	Name     string  `json:"name"`
+	Lastname string  `json:"lastname"`
+	Amount   float64 `json:"amount"`
 }
 
 // SimpleChaincode example simple Chaincode implementation
@@ -23,20 +26,22 @@ type SimpleChaincode struct {
 }
 
 func main() {
-	fmt.Printf("Iniciandooo....")
+	fmt.Printf("Iniciandooo Contrato Wallet....")
 	err := shim.Start(new(SimpleChaincode))
 	if err != nil {
-		fmt.Printf("Error starting Simple chaincode: %s", err)
+		fmt.Printf("Error Iniciando Wallet Smart Contract: %s", err)
 	}
 }
 
-// Init resets all the things
+// Init reinicia los estados del ledger
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	if len(args) != 1 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 1")
+		return nil, errors.New("Número de Argumentos incorrecto. Se esperaba 1 argumento")
 	}
 
-	err := stub.PutState("hello_world", []byte(args[0]))
+	//coinBalance, err := strconv.ParseFloat(args[0], 64)
+
+	err := stub.PutState("coinBalance", []byte(args[0]))
 	if err != nil {
 		return nil, err
 	}
@@ -44,51 +49,64 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	return nil, nil
 }
 
-// Invoke isur entry point to invoke a chaincode function
+// Invoke Punto de entrada a cualquier función del ledger
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-	fmt.Println("invoke is running " + function)
+	fmt.Println("invoke is running..FUNCTION:" + function)
 
 	// Handle different functions
-	if function == "init" {
-		return t.Init(stub, "init", args)
-	} else if function == "write" {
-		return t.write(stub, args)
-	} else if function == "addproduct" {
+	//if function == "init" {
+	//	return t.Init(stub, "init", args)
+	//} else
+	if function == "createwallet" {
+		return t.createWallet(stub, args)
+	} else if function == "addcoin" {
 		return t.addProduct(stub, args)
 	}
-	fmt.Println("invoke did not find func: " + function)
+	fmt.Println("invoke no encuentra la funcion: " + function)
 
-	return nil, errors.New("Received unknown function invocation: " + function)
+	return nil, errors.New("Funcion invocada desconocida: " + function)
 }
 
-// Query is our entry point for queries
+// Query es nuestro punto de entrada de querys
 func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-	fmt.Println("query is running " + function)
+	fmt.Println("query is running FUNCTION:" + function)
 
-	// Handle different functions
+	// Manejar diferentes funciones
 	if function == "read" { //read a variable
 		return t.read(stub, args)
-	} else if function == "readproduct" {
-		return t.readProduct(stub, args)
+	} else if function == "getbalance" {
+		return t.getBalance(stub, args)
 	}
-	fmt.Println("query did not find func: " + function)
+	fmt.Println("query no encuentra la funcion: " + function)
 
-	return nil, errors.New("Received unknown function query: " + function)
+	return nil, errors.New("Funcion invocada desconocida: " + function)
 }
 
-// write - invoke function to write key/value pair
-func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	var key, value string
-	var err error
-	fmt.Println("running write()")
+// createWallet - invocar esta funcion para crear un wallet con saldo inicial
+func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	fmt.Println("Call---Funcion createWallet---")
+	if len(args) != 3 {
+		return nil, errors.New("Numero incorrecto de argumentos.Se espera 3 para createWallet")
+	}
+	
+	u1 := uuid.NewV4()
+	fmt.Printf("UUIDv4: %s\n", u1)
+	amt, err := strconv.ParseFloat(args[2], 64)
 
-	if len(args) != 2 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the key and value to set")
+	wallet := Wallet{
+		Id:        u1,			
+		Name:      args[0],
+		Lastname:  args[1],
+		Amount:    amt,
 	}
 
-	key = args[0] //rename for funsies
-	value = args[1]
-	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
+	bytes, err := json.Marshal(wallet)
+	if err != nil {
+		fmt.Println("Error marshaling wallet")
+		return nil, errors.New("Error marshaling wallet")
+	}
+
+	err = stub.PutState(wallet.Id.String(), bytes)
 	if err != nil {
 		return nil, err
 	}
@@ -120,58 +138,59 @@ func (t *SimpleChaincode) addProduct(stub shim.ChaincodeStubInterface, args []st
 		return nil, errors.New("Incorrect Number of arguments.Expecting 4 for addProduct")
 	}
 	amt, err := strconv.ParseFloat(args[1], 64)
-	
 
-	product := Product{
-		Name:   args[0],
-		Amount: amt,
-		Owner: args[2],
+	/*product := Product{
+		Name:      args[0],
+		Amount:    amt,
+		Owner:     args[2],
 		Productid: args[3],
-	}
+	}*/
+	
+	amt=amt+1
 
-	bytes, err := json.Marshal(product)
+	//bytes, err := json.Marshal(product)
 	if err != nil {
 		fmt.Println("Error marshaling product")
 		return nil, errors.New("Error marshaling product")
 	}
 
-	err = stub.PutState(product.Productid, bytes)
+	err = stub.PutState("aaa", []byte("asd"))
 	if err != nil {
 		return nil, err
-}
-return nil, nil
+	}
+	return nil, nil
 }
 
-func (t *SimpleChaincode) readProduct(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	fmt.Println("read() is running")
+func (t *SimpleChaincode) getBalance(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	fmt.Println("----getBalance() is running----")
 
 	if len(args) != 1 {
-		return nil, errors.New("Incorrect number of arguments. expecting 1")
+		return nil, errors.New("Incorrecto numero de argumentos. Se esperaba 1")
 	}
 
-	key := args[0] // name of Entity
-	fmt.Println("key is ")
-	fmt.Println(key)
+	walletId := args[0] // wallet id
+	fmt.Println("wallet id is ")
+	fmt.Println(walletId)
 	bytes, err := stub.GetState(args[0])
 	fmt.Println(bytes)
 	if err != nil {
-		fmt.Println("Error retrieving " + key)
-		return nil, errors.New("Error retrieving " + key)
+		fmt.Println("Error retrieving " + walletId)
+		return nil, errors.New("Error retrieving " + walletId)
 	}
 	/*
-	product := Product{}
-	err = json.Unmarshal(bytes, &product)
-	if err != nil {
-		fmt.Println("Error Unmarshaling customerBytes")
-		return nil, errors.New("Error Unmarshaling customerBytes")
-	}
-	
-	bytes, err = json.Marshal(product)
-	if err != nil {
-		fmt.Println("Error marshaling customer")
-		return nil, errors.New("Error marshaling customer")
-	}
-	fmt.Println(bytes)
+		product := Product{}
+		err = json.Unmarshal(bytes, &product)
+		if err != nil {
+			fmt.Println("Error Unmarshaling customerBytes")
+			return nil, errors.New("Error Unmarshaling customerBytes")
+		}
+
+		bytes, err = json.Marshal(product)
+		if err != nil {
+			fmt.Println("Error marshaling customer")
+			return nil, errors.New("Error marshaling customer")
+		}
+		fmt.Println(bytes)
 	*/
 	return bytes, nil
 }
