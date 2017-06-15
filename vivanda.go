@@ -2,7 +2,7 @@
   Vivanda Smart Contract
   Adrian Pareja
 */
-package vivanda
+package main
 
 import (
 	"errors"
