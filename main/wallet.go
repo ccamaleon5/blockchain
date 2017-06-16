@@ -32,7 +32,7 @@ type UUID [16]byte
 
 //Wallet - Structure for products used in buy goods
 type Wallet struct {
-	Id        UUID    `json:"id"`
+	Id        string    `json:"id"`
 	email     string  `json:"email"`
 	phone     string  `json:"phone"`
 	document  string `json:"document"`
@@ -107,7 +107,7 @@ func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []
 	amt, err := strconv.ParseFloat(args[4], 64)
 
 	wallet := Wallet{
-		Id:        walletId,
+		Id:        walletId.String(),
 		email:     args[0],
 		phone:     args[1],
 		document:  args[2],
@@ -121,7 +121,7 @@ func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []
 		return nil, errors.New("Error marshaling wallet")
 	}
 
-	err = stub.PutState(wallet.Id.String(), bytes)
+	err = stub.PutState(wallet.Id, bytes)
 	if err != nil {
 		return nil, err
 	}
