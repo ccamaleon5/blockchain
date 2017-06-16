@@ -33,11 +33,11 @@ type UUID [16]byte
 //Wallet - Structure for products used in buy goods
 type Wallet struct {
 	Id        string    `json:"id"`
-	email     string  `json:"email"`
-	phone     string  `json:"phone"`
-	document  string `json:"document"`
-	password  string `json:"password"` 
-	amount    float64 `json:"amount"` 
+	Email     string  `json:"email"`
+	Phone     string  `json:"phone"`
+	Document  string `json:"document"`
+	Password  string `json:"password"` 
+	Amount    float64 `json:"amount"` 
 }
 
 // SimpleChaincode example simple Chaincode implementation
@@ -105,6 +105,7 @@ func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []
 	walletId := NewV4()
 	fmt.Printf("UUIDv4: %s\n", walletId)
 	amt, err := strconv.ParseFloat(args[4], 64)
+	
 	if err != nil {
 		fmt.Println("Error Float parsing")
 		return nil, errors.New("Error marshaling wallet")
@@ -112,11 +113,11 @@ func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []
 
 	wallet := Wallet{
 		Id:        walletId.String(),
-		email:     args[0],
-		phone:     args[1],
-		document:  args[2],
-		password:  args[3],
-		amount:    amt,
+		Email:     args[0],
+		Phone:     args[1],
+		Document:  args[2],
+		Password:  args[3],
+		Amount:    amt,
 	}
 
 	bytes, err := json.Marshal(wallet)
@@ -164,8 +165,8 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 	
 	amt, err := strconv.ParseFloat(args[2], 64)
 	
-	walletSender.amount = walletSender.amount-amt //debita el monto
-	walletReceiver.amount = walletReceiver.amount+amt //carga el monto
+	walletSender.Amount = walletSender.Amount-amt //debita el monto
+	walletReceiver.Amount = walletReceiver.Amount+amt //carga el monto
 
 	walletSenderJSONasBytes, _ := json.Marshal(walletSender)
 	err = stub.PutState(args[0], walletSenderJSONasBytes) //rewrite the wallet
@@ -201,13 +202,13 @@ func (t *SimpleChaincode) getBalance(stub shim.ChaincodeStubInterface, args []st
 	wallet := Wallet{}
 	err1 := json.Unmarshal(bytes, &wallet)
 	
-	fmt.Println(wallet.amount)
+	fmt.Println(wallet.Amount)
 	if err1 != nil {
 		fmt.Println("Error parseando a Json" + args[0])
 		return nil, errors.New("Error retrieving Balance" + args[0])
 	}
 	
-	return []byte(strconv.FormatFloat(wallet.amount,'f',6,64)), nil
+	return []byte(strconv.FormatFloat(wallet.Amount,'f',6,64)), nil
 }
 
 func (t *SimpleChaincode) getTotalCoin(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
