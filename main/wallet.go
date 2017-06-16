@@ -105,6 +105,10 @@ func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []
 	walletId := NewV4()
 	fmt.Printf("UUIDv4: %s\n", walletId)
 	amt, err := strconv.ParseFloat(args[4], 64)
+	if err != nil {
+		fmt.Println("Error Float parsing")
+		return nil, errors.New("Error marshaling wallet")
+	}
 
 	wallet := Wallet{
 		Id:        walletId.String(),
