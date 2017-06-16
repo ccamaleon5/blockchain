@@ -190,13 +190,20 @@ func (t *SimpleChaincode) getBalance(stub shim.ChaincodeStubInterface, args []st
 	fmt.Println("wallet id is ")
 	fmt.Println(walletId)
 	bytes, err := stub.GetState(args[0])
-	fmt.Println(bytes)
 	if err != nil {
 		fmt.Println("Error retrieving " + walletId)
 		return nil, errors.New("Error retrieving " + walletId)
 	}
+	wallet := Wallet{}
+	err1 := json.Unmarshal(bytes, &wallet)
 	
-	return bytes, nil
+	fmt.Println(wallet.amount)
+	if err1 != nil {
+		fmt.Println("Error parseando a Json" + args[0])
+		return nil, errors.New("Error retrieving Balance" + args[0])
+	}
+	
+	return []byte(strconv.FormatFloat(wallet.amount,'f',6,64)), nil
 }
 
 func (t *SimpleChaincode) getTotalCoin(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
