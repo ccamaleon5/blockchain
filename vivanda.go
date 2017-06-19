@@ -33,10 +33,12 @@ type UUID [16]byte
 
 //Wallet - Structure for products used in buy goods
 type Wallet struct {
-	Id       UUID    `json:"id"`
-	Name     string  `json:"name"`
-	Lastname string  `json:"lastname"`
-	Amount   float64 `json:"amount"`
+	Id        string    `json:"id"`
+	Email     string  `json:"email"`
+	Phone     string  `json:"phone"`
+	Document  string `json:"document"`
+	Password  string `json:"password"` 
+	Amount    float64 `json:"amount"` 
 }
 
 // SimpleChaincode example simple Chaincode implementation
@@ -71,8 +73,8 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 
 	if function == "createwallet" {
 		return t.createWallet(stub, args)
-	} else if function == "comprar" {
-		return t.comprar(stub, args)
+	} else if function == "buy" {
+		return t.buy(stub, args)
 	}
 	fmt.Println("invoke no encuentra la funcion: " + function)
 
@@ -96,14 +98,14 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	fmt.Println("Call---Funcion createWallet---")
 	
-	chainCodeToCall := "1f8ff52a605dd8019f0e063e5630ce1ef2f91ea921eecd2fa88af47ca6f732484aa208c6e5006b1231930a3530f01c889d9253c85d311f95ce7411c284b13480"
+	chainCodeToCall := "14b0617319d9256064082c4883a43cb81be0be5d3b8fb6066aa74fb1ae57c7714e310ad9d1c45b04923b682da1f99241d9fc37f32477f68ec053b8744217bb2b"
 	
 	if len(args) != 4 {
 		return nil, errors.New("Numero incorrecto de argumentos.Se espera 4 para createWallet")
 	}
 
-	f := "invoke"
-	invokeArgs := util.ToChaincodeArgs(f, args[0], args[1], args[2], args[3])
+	f := "createwallet"
+	invokeArgs := util.ToChaincodeArgs(f, args[0], args[1], args[2], "prueba", args[3])
 	response, err := stub.InvokeChaincode(chainCodeToCall, invokeArgs)
 	if err != nil {
 		errStr := fmt.Sprintf("Failed to invoke chaincode. Got error: %s", err.Error())
@@ -117,17 +119,50 @@ func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []
 }
 
 // createWallet - invocar esta funcion para crear un wallet con saldo inicial
-func (t *SimpleChaincode) comprar(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	fmt.Println("Call---Funcion createWallet---")
+func (t *SimpleChaincode) buy(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	fmt.Println("Call---Funcion Buy---")
 
-	chainCodeToCall := "1f8ff52a605dd8019f0e063e5630ce1ef2f91ea921eecd2fa88af47ca6f732484aa208c6e5006b1231930a3530f01c889d9253c85d311f95ce7411c284b13480"
+	chainCodeToCall := "14b0617319d9256064082c4883a43cb81be0be5d3b8fb6066aa74fb1ae57c7714e310ad9d1c45b04923b682da1f99241d9fc37f32477f68ec053b8744217bb2b"
 	
-	if len(args) != 3 {
-		return nil, errors.New("Numero incorrecto de argumentos.Se espera 3 para createWallet")
+	if len(args) != 4 {
+		return nil, errors.New("Numero incorrecto de argumentos.Se espera 4 para buy")
 	}
 
-	f := "invoke"
-	invokeArgs := util.ToChaincodeArgs(f, args[0], args[1], args[2])
+	var change float64 = 2
+	
+	soles, err := strconv.ParseFloat(args[2], 64)
+	if err != nil {
+		errStr := fmt.Sprintf("Fallo convertir cadena a float: %s", err.Error())
+		return nil, errors.New(errStr)
+	}
+	
+	coins, err1 := strconv.ParseFloat(args[3], 64)
+	if err1 != nil {
+		errStr := fmt.Sprintf("Fallo convertir cadena a float: %s", err.Error())
+		return nil, errors.New(errStr)
+	}
+	
+	f := "debitbalance"
+	
+	//Compra soles y canje coins
+	if soles > 0 && coins > 0 {
+		coins = (soles * change) - coins
+		if coins < 0 {
+			coins = coins*-1
+			f = "debitbalance"
+		} else {
+			f = "putbalance"
+		}
+	} else {
+		if soles > 0 {  //Compra Soles
+			f = "putbalance"					
+			coins = soles * change
+		}else if coins > 0 {  //Canje Coins
+			f = "debitbalance"
+		}
+	}
+
+	invokeArgs := util.ToChaincodeArgs(f, strconv.FormatFloat(coins,'f',6,64))
 	response, err := stub.InvokeChaincode(chainCodeToCall, invokeArgs)
 	if err != nil {
 		errStr := fmt.Sprintf("Failed to invoke chaincode. Got error: %s", err.Error())
@@ -140,86 +175,27 @@ func (t *SimpleChaincode) comprar(stub shim.ChaincodeStubInterface, args []strin
 	return nil, nil
 }
 
-// read - query function to read key/value pair
-func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	var key, jsonResp string
-	var err error
-
-	if len(args) != 1 {
-		return nil, errors.New("Incorrect number of arguments. Expecting name of the key to query")
-	}
-
-	key = args[0]
-	valAsbytes, err := stub.GetState(key)
-	if err != nil {
-		jsonResp = "{\"Error\":\"Failed to get state for " + key + "\"}"
-		return nil, errors.New(jsonResp)
-	}
-
-	return valAsbytes, nil
-}
-
-func (t *SimpleChaincode) addProduct(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	fmt.Println("adding product information")
-	if len(args) != 4 {
-		return nil, errors.New("Incorrect Number of arguments.Expecting 4 for addProduct")
-	}
-	amt, err := strconv.ParseFloat(args[1], 64)
-
-	/*product := Product{
-		Name:      args[0],
-		Amount:    amt,
-		Owner:     args[2],
-		Productid: args[3],
-	}*/
-
-	amt = amt + 1
-
-	//bytes, err := json.Marshal(product)
-	if err != nil {
-		fmt.Println("Error marshaling product")
-		return nil, errors.New("Error marshaling product")
-	}
-
-	err = stub.PutState("aaa", []byte("asd"))
-	if err != nil {
-		return nil, err
-	}
-	return nil, nil
-}
-
 func (t *SimpleChaincode) getBalance(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	fmt.Println("----getBalance() is running----")
 
+	chainCodeToCall := "14b0617319d9256064082c4883a43cb81be0be5d3b8fb6066aa74fb1ae57c7714e310ad9d1c45b04923b682da1f99241d9fc37f32477f68ec053b8744217bb2b"
+	
 	if len(args) != 1 {
-		return nil, errors.New("Incorrecto numero de argumentos. Se esperaba 1")
+		return nil, errors.New("Numero incorrecto de argumentos.Se espera 1 para createWallet")
 	}
 
-	walletId := args[0] // wallet id
-	fmt.Println("wallet id is ")
-	fmt.Println(walletId)
-	bytes, err := stub.GetState(args[0])
-	fmt.Println(bytes)
+	f := "getbalance"
+	invokeArgs := util.ToChaincodeArgs(f, args[0])
+	response, err := stub.QueryChaincode(chainCodeToCall, invokeArgs)
 	if err != nil {
-		fmt.Println("Error retrieving " + walletId)
-		return nil, errors.New("Error retrieving " + walletId)
+		errStr := fmt.Sprintf("Failed to query chaincode. Got error: %s", err.Error())
+		fmt.Printf(errStr)
+		return nil, errors.New(errStr)
 	}
-	/*
-		product := Product{}
-		err = json.Unmarshal(bytes, &product)
-		if err != nil {
-			fmt.Println("Error Unmarshaling customerBytes")
-			return nil, errors.New("Error Unmarshaling customerBytes")
-		}
 
-		bytes, err = json.Marshal(product)
-		if err != nil {
-			fmt.Println("Error marshaling customer")
-			return nil, errors.New("Error marshaling customer")
-		}
-		fmt.Println(bytes)
-	*/
-	return bytes, nil
+	fmt.Printf("Invoke chaincode successful. Got response %s", string(response))
+
+	return nil, nil
 }
 
 func safeRandom(dest []byte) {
