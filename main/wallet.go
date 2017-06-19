@@ -72,8 +72,16 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 
 	if function == "createwallet" {
 		return t.createWallet(stub, args)
-	} else if function == "transfer" {
-		return t.transfer(stub, args)
+	} else{ 
+		if function == "transfer" {
+			return t.transfer(stub, args)
+		} else{
+			if function == "putbalance"{
+				return t.putBalance(stub,args)
+			} else if function == "debitbalance" {
+				return t.debitBalance(stub,args)
+			}
+		}
 	}
 	fmt.Println("invoke no encuentra la funcion: " + function)
 
@@ -130,7 +138,77 @@ func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []
 	if err != nil {
 		return nil, err
 	}
-	return nil, nil
+	return []byte("{\"code\":0,\"response\":null}"), nil
+}
+
+// putBalance - invocar esta funcion incrementar los coins en el balance
+func (t *SimpleChaincode) putBalance(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	fmt.Println("Call---Funcion PutBalance---")
+	if len(args) != 2 {
+		return nil, errors.New("Numero incorrecto de argumentos.Se espera 2 para createWallet")
+	}
+	
+	fmt.Printf("WalletId 1: %s\n", args[0])
+	fmt.Printf("Monto: %s\n", args[1])
+
+	bytesWallet1, err1 := stub.GetState(args[0])
+	
+	walletReceiver := Wallet{}
+	err := json.Unmarshal(bytesWallet1, &walletReceiver)
+	
+	fmt.Println(walletReceiver)
+	if err1 != nil {
+		fmt.Println("Error retrieving " + args[0])
+		return nil, errors.New("Error retrieving " + args[0])
+	}
+	
+	amt, err := strconv.ParseFloat(args[1], 64)
+	
+	walletReceiver.Amount = walletReceiver.Amount+amt //carga coins al balance
+
+	walletReceiverJSONasBytes, _ := json.Marshal(walletReceiver)
+	err = stub.PutState(args[0], walletReceiverJSONasBytes) //rewrite the wallet
+	
+	if err != nil {
+		return nil, err
+	}
+	
+	return []byte("{\"code\":0,\"response\":null}"), nil
+}
+
+// debitBalance - invocar esta funcion debitar coins del balance
+func (t *SimpleChaincode) debitBalance(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	fmt.Println("Call---Funcion DebitBalance---")
+	if len(args) != 2 {
+		return nil, errors.New("Numero incorrecto de argumentos.Se espera 2 para createWallet")
+	}
+	
+	fmt.Printf("WalletId 1: %s\n", args[0])
+	fmt.Printf("Monto: %s\n", args[1])
+
+	bytesWallet1, err1 := stub.GetState(args[0])
+	
+	walletReceiver := Wallet{}
+	err := json.Unmarshal(bytesWallet1, &walletReceiver)
+	
+	fmt.Println(walletReceiver)
+	if err1 != nil {
+		fmt.Println("Error retrieving " + args[0])
+		return nil, errors.New("Error retrieving " + args[0])
+	}
+	
+	amt, err := strconv.ParseFloat(args[1], 64)
+	
+	walletReceiver.Amount = walletReceiver.Amount-amt //carga coins al balance
+
+	walletReceiverJSONasBytes, _ := json.Marshal(walletReceiver)
+	err = stub.PutState(args[0], walletReceiverJSONasBytes) //rewrite the wallet
+	
+	if err != nil {
+		return nil, err
+	}
+	
+	return []byte("{\"code\":0,\"response\":null}"), nil
 }
 
 // transfer - invocar esta funcion para transferir coins de un wallet a otro
@@ -181,7 +259,7 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 		return nil, err
 	}
 	
-	return nil, nil
+	return []byte("{\"code\":0,\"response\":null}"), nil
 }
 
 func (t *SimpleChaincode) getBalance(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
@@ -208,7 +286,7 @@ func (t *SimpleChaincode) getBalance(stub shim.ChaincodeStubInterface, args []st
 		return nil, errors.New("Error retrieving Balance" + args[0])
 	}
 	
-	return []byte(strconv.FormatFloat(wallet.Amount,'f',6,64)), nil
+	return []byte(fmt.Sprintf("{\"code\":0,\"response\":\"%s\"}",strconv.FormatFloat(wallet.Amount,'f',6,64))), nil
 }
 
 func (t *SimpleChaincode) getTotalCoin(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
@@ -221,7 +299,7 @@ func (t *SimpleChaincode) getTotalCoin(stub shim.ChaincodeStubInterface, args []
 		return nil, errors.New("Error retrieving coinBalance")
 	}
 	
-	return bytes, nil
+	return []byte(fmt.Sprintf("{\"code\":0,\"response\":\"%s\"}",fmt.Sprint(bytes))), nil
 }
 
 func safeRandom(dest []byte) {
