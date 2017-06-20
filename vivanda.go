@@ -5,6 +5,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -41,6 +42,12 @@ type Wallet struct {
 	Amount    float64 `json:"amount"` 
 }
 
+//Response - Structure for response
+type ResponseContract struct {
+	Code        int32    `json:"code"`
+	Response    string  `json:"response"` 
+}
+
 // SimpleChaincode example simple Chaincode implementation
 type SimpleChaincode struct {
 }
@@ -69,7 +76,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 
 // Invoke Punto de entrada a cualquier función del ledger
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-	fmt.Println("invoke is running..FUNCTION:" + function)
+	fmt.Println("Vivanda invoke is running..FUNCTION:" + function)
 
 	if function == "createwallet" {
 		return t.createWallet(stub, args)
@@ -83,7 +90,7 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 
 // Query es nuestro punto de entrada de querys
 func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-	fmt.Println("query is running FUNCTION:" + function)
+	fmt.Println("Vivanda query is running FUNCTION:" + function)
 
 	// Manejar diferentes funciones
 	if function == "getbalance" {
@@ -96,9 +103,9 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 
 // createWallet - invocar esta funcion para crear un wallet con saldo inicial
 func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	fmt.Println("Call---Funcion createWallet---")
+	fmt.Println("Vivanda Call---Funcion createWallet---")
 	
-	chainCodeToCall := "14b0617319d9256064082c4883a43cb81be0be5d3b8fb6066aa74fb1ae57c7714e310ad9d1c45b04923b682da1f99241d9fc37f32477f68ec053b8744217bb2b"
+	chainCodeToCall := "56feb95c0f2a1ce20c327e382e09bc4a730e22cd2830d839459941ee8f9b7ebe1308f4107dca11914232f38d9baf87fd6f5af31913ac934714b7e813ad234476"
 	
 	if len(args) != 4 {
 		return nil, errors.New("Numero incorrecto de argumentos.Se espera 4 para createWallet")
@@ -120,9 +127,9 @@ func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []
 
 // createWallet - invocar esta funcion para crear un wallet con saldo inicial
 func (t *SimpleChaincode) buy(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	fmt.Println("Call---Funcion Buy---")
+	fmt.Println("Vivanda Call---Funcion Buy---")
 
-	chainCodeToCall := "14b0617319d9256064082c4883a43cb81be0be5d3b8fb6066aa74fb1ae57c7714e310ad9d1c45b04923b682da1f99241d9fc37f32477f68ec053b8744217bb2b"
+	chainCodeToCall := "56feb95c0f2a1ce20c327e382e09bc4a730e22cd2830d839459941ee8f9b7ebe1308f4107dca11914232f38d9baf87fd6f5af31913ac934714b7e813ad234476"
 	
 	if len(args) != 4 {
 		return nil, errors.New("Numero incorrecto de argumentos.Se espera 4 para buy")
@@ -176,12 +183,12 @@ func (t *SimpleChaincode) buy(stub shim.ChaincodeStubInterface, args []string) (
 }
 
 func (t *SimpleChaincode) getBalance(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	fmt.Println("----getBalance() is running----")
+	fmt.Println("Vivanda----getBalance() is running----")
 
-	chainCodeToCall := "14b0617319d9256064082c4883a43cb81be0be5d3b8fb6066aa74fb1ae57c7714e310ad9d1c45b04923b682da1f99241d9fc37f32477f68ec053b8744217bb2b"
+	chainCodeToCall := "56feb95c0f2a1ce20c327e382e09bc4a730e22cd2830d839459941ee8f9b7ebe1308f4107dca11914232f38d9baf87fd6f5af31913ac934714b7e813ad234476"
 	
 	if len(args) != 1 {
-		return nil, errors.New("Numero incorrecto de argumentos.Se espera 1 para createWallet")
+		return nil, errors.New("Numero incorrecto de argumentos.Se espera 1 para getBalance")
 	}
 
 	f := "getbalance"
@@ -195,7 +202,16 @@ func (t *SimpleChaincode) getBalance(stub shim.ChaincodeStubInterface, args []st
 
 	fmt.Printf("Invoke chaincode successful. Got response %s", string(response))
 
-	return nil, nil
+	responseContract := ResponseContract{}
+	err1 := json.Unmarshal(response, &responseContract)
+	
+	fmt.Println(responseContract.Response)
+	if err1 != nil {
+		fmt.Println("Error parseando a Json" + args[0])
+		return nil, errors.New("Error retrieving Balance" + args[0])
+	}
+	
+	return []byte(fmt.Sprintf(`{"code":0,"response":"%s"}`,responseContract.Response)), nil
 }
 
 func safeRandom(dest []byte) {
