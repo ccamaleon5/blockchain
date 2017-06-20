@@ -138,7 +138,7 @@ func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []
 	if err != nil {
 		return nil, err
 	}
-	return []byte("{\"code\":0,\"response\":null}"), nil
+	return []byte(`{"code":0,"response":null}`), nil
 }
 
 // putBalance - invocar esta funcion incrementar los coins en el balance
@@ -173,7 +173,7 @@ func (t *SimpleChaincode) putBalance(stub shim.ChaincodeStubInterface, args []st
 		return nil, err
 	}
 	
-	return []byte("{\"code\":0,\"response\":null}"), nil
+	return []byte(`{"code":0,"response":null}`), nil
 }
 
 // debitBalance - invocar esta funcion debitar coins del balance
@@ -208,7 +208,7 @@ func (t *SimpleChaincode) debitBalance(stub shim.ChaincodeStubInterface, args []
 		return nil, err
 	}
 	
-	return []byte("{\"code\":0,\"response\":null}"), nil
+	return []byte(`{"code":0,"response":null}`), nil
 }
 
 // transfer - invocar esta funcion para transferir coins de un wallet a otro
@@ -259,7 +259,7 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 		return nil, err
 	}
 	
-	return []byte("{\"code\":0,\"response\":null}"), nil
+	return []byte(`{"code":0,"response":null}`), nil
 }
 
 func (t *SimpleChaincode) getBalance(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
@@ -286,7 +286,7 @@ func (t *SimpleChaincode) getBalance(stub shim.ChaincodeStubInterface, args []st
 		return nil, errors.New("Error retrieving Balance" + args[0])
 	}
 	
-	return []byte(fmt.Sprintf("{\"code\":0,\"response\":\"%s\"}",strconv.FormatFloat(wallet.Amount,'f',6,64))), nil
+	return []byte(fmt.Sprintf(`{"code":0,"response":"%s"}`,strconv.FormatFloat(wallet.Amount,'f',6,64))), nil
 }
 
 func (t *SimpleChaincode) getTotalCoin(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
@@ -299,7 +299,7 @@ func (t *SimpleChaincode) getTotalCoin(stub shim.ChaincodeStubInterface, args []
 		return nil, errors.New("Error retrieving coinBalance")
 	}
 	
-	return []byte(fmt.Sprintf("{\"code\":0,\"response\":\"%s\"}",fmt.Sprint(bytes))), nil
+	return []byte(fmt.Sprintf(`{"code":0,"response":"%s"}`,bytes)), nil
 }
 
 func safeRandom(dest []byte) {
