@@ -131,19 +131,19 @@ func (t *SimpleChaincode) buy(stub shim.ChaincodeStubInterface, args []string) (
 
 	chainCodeToCall := "56feb95c0f2a1ce20c327e382e09bc4a730e22cd2830d839459941ee8f9b7ebe1308f4107dca11914232f38d9baf87fd6f5af31913ac934714b7e813ad234476"
 	
-	if len(args) != 4 {
-		return nil, errors.New("Numero incorrecto de argumentos.Se espera 4 para buy")
+	if len(args) != 3 {
+		return nil, errors.New("Numero incorrecto de argumentos.Se espera 3 para buy")
 	}
 
 	var change float64 = 2
 	
-	soles, err := strconv.ParseFloat(args[2], 64)
+	soles, err := strconv.ParseFloat(args[1], 64)
 	if err != nil {
 		errStr := fmt.Sprintf("Fallo convertir cadena a float: %s", err.Error())
 		return nil, errors.New(errStr)
 	}
 	
-	coins, err1 := strconv.ParseFloat(args[3], 64)
+	coins, err1 := strconv.ParseFloat(args[2], 64)
 	if err1 != nil {
 		errStr := fmt.Sprintf("Fallo convertir cadena a float: %s", err.Error())
 		return nil, errors.New(errStr)
@@ -169,7 +169,7 @@ func (t *SimpleChaincode) buy(stub shim.ChaincodeStubInterface, args []string) (
 		}
 	}
 
-	invokeArgs := util.ToChaincodeArgs(f, strconv.FormatFloat(coins,'f',6,64))
+	invokeArgs := util.ToChaincodeArgs(f, args[0],strconv.FormatFloat(coins,'f',6,64))
 	response, err := stub.InvokeChaincode(chainCodeToCall, invokeArgs)
 	if err != nil {
 		errStr := fmt.Sprintf("Failed to invoke chaincode. Got error: %s", err.Error())
