@@ -106,13 +106,13 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 // createWallet - invocar esta funcion para crear un wallet con saldo inicial
 func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	fmt.Println("Call---Funcion createWallet---")
-	if len(args) != 5 {
-		return nil, errors.New("Numero incorrecto de argumentos.Se espera 5 para createWallet")
+	if len(args) != 6 {
+		return nil, errors.New("Numero incorrecto de argumentos.Se espera 6 para createWallet")
 	}
 
 	walletId := NewV4()
 	fmt.Printf("UUIDv4: %s\n", walletId)
-	amt, err := strconv.ParseFloat(args[4], 64)
+	amt, err := strconv.ParseFloat(args[5], 64)
 	
 	if err != nil {
 		fmt.Println("Error Float parsing")
@@ -120,11 +120,11 @@ func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []
 	}
 
 	wallet := Wallet{
-		Id:        walletId.String(),
-		Email:     args[0],
-		Phone:     args[1],
-		Document:  args[2],
-		Password:  args[3],
+		Id:        args[0],
+		Email:     args[1],
+		Phone:     args[2],
+		Document:  args[3],
+		Password:  args[4],
 		Amount:    amt,
 	}
 
