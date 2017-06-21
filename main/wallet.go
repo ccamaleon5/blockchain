@@ -32,12 +32,12 @@ type UUID [16]byte
 
 //Wallet - Structure for products used in buy goods
 type Wallet struct {
-	Id        string    `json:"id"`
-	Email     string  `json:"email"`
-	Phone     string  `json:"phone"`
-	Document  string `json:"document"`
-	Password  string `json:"password"` 
-	Amount    float64 `json:"amount"` 
+	Id       string  `json:"id"`
+	Email    string  `json:"email"`
+	Phone    string  `json:"phone"`
+	Document string  `json:"document"`
+	Password string  `json:"password"`
+	Amount   float64 `json:"amount"`
 }
 
 // SimpleChaincode example simple Chaincode implementation
@@ -72,14 +72,14 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 
 	if function == "createwallet" {
 		return t.createWallet(stub, args)
-	} else{ 
+	} else {
 		if function == "transfer" {
 			return t.transfer(stub, args)
-		} else{
-			if function == "putbalance"{
-				return t.putBalance(stub,args)
+		} else {
+			if function == "putbalance" {
+				return t.putBalance(stub, args)
 			} else if function == "debitbalance" {
-				return t.debitBalance(stub,args)
+				return t.debitBalance(stub, args)
 			}
 		}
 	}
@@ -95,7 +95,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 	// Manejar diferentes funciones
 	if function == "getbalance" {
 		return t.getBalance(stub, args)
-	}else if function == "gettotalcoin"{
+	} else if function == "gettotalcoin" {
 		return t.getTotalCoin(stub, args)
 	}
 	fmt.Println("query no encuentra la funcion: " + function)
@@ -113,19 +113,19 @@ func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []
 	walletId := NewV4()
 	fmt.Printf("UUIDv4: %s\n", walletId)
 	amt, err := strconv.ParseFloat(args[5], 64)
-	
+
 	if err != nil {
 		fmt.Println("Error Float parsing")
 		return nil, errors.New("Error marshaling wallet")
 	}
 
 	wallet := Wallet{
-		Id:        args[0],
-		Email:     args[1],
-		Phone:     args[2],
-		Document:  args[3],
-		Password:  args[4],
-		Amount:    amt,
+		Id:       args[0],
+		Email:    args[1],
+		Phone:    args[2],
+		Document: args[3],
+		Password: args[4],
+		Amount:   amt,
 	}
 
 	bytes, err := json.Marshal(wallet)
@@ -147,32 +147,32 @@ func (t *SimpleChaincode) putBalance(stub shim.ChaincodeStubInterface, args []st
 	if len(args) != 2 {
 		return nil, errors.New("Numero incorrecto de argumentos.Se espera 2 para createWallet")
 	}
-	
+
 	fmt.Printf("WalletId 1: %s\n", args[0])
 	fmt.Printf("Monto: %s\n", args[1])
 
 	bytesWallet1, err1 := stub.GetState(args[0])
-	
+
 	walletReceiver := Wallet{}
 	err := json.Unmarshal(bytesWallet1, &walletReceiver)
-	
+
 	fmt.Println(walletReceiver)
 	if err1 != nil {
 		fmt.Println("Error retrieving " + args[0])
 		return nil, errors.New("Error retrieving " + args[0])
 	}
-	
+
 	amt, err := strconv.ParseFloat(args[1], 64)
-	
-	walletReceiver.Amount = walletReceiver.Amount+amt //carga coins al balance
+
+	walletReceiver.Amount = walletReceiver.Amount + amt //carga coins al balance
 
 	walletReceiverJSONasBytes, _ := json.Marshal(walletReceiver)
 	err = stub.PutState(args[0], walletReceiverJSONasBytes) //rewrite the wallet
-	
+
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return []byte(`{"code":0,"response":null}`), nil
 }
 
@@ -182,32 +182,32 @@ func (t *SimpleChaincode) debitBalance(stub shim.ChaincodeStubInterface, args []
 	if len(args) != 2 {
 		return nil, errors.New("Numero incorrecto de argumentos.Se espera 2 para createWallet")
 	}
-	
+
 	fmt.Printf("WalletId 1: %s\n", args[0])
 	fmt.Printf("Monto: %s\n", args[1])
 
 	bytesWallet1, err1 := stub.GetState(args[0])
-	
+
 	walletReceiver := Wallet{}
 	err := json.Unmarshal(bytesWallet1, &walletReceiver)
-	
+
 	fmt.Println(walletReceiver)
 	if err1 != nil {
 		fmt.Println("Error retrieving " + args[0])
 		return nil, errors.New("Error retrieving " + args[0])
 	}
-	
+
 	amt, err := strconv.ParseFloat(args[1], 64)
-	
-	walletReceiver.Amount = walletReceiver.Amount-amt //carga coins al balance
+
+	walletReceiver.Amount = walletReceiver.Amount - amt //carga coins al balance
 
 	walletReceiverJSONasBytes, _ := json.Marshal(walletReceiver)
 	err = stub.PutState(args[0], walletReceiverJSONasBytes) //rewrite the wallet
-	
+
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return []byte(`{"code":0,"response":null}`), nil
 }
 
@@ -217,16 +217,16 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 	if len(args) != 3 {
 		return nil, errors.New("Numero incorrecto de argumentos.Se espera 3 para createWallet")
 	}
-	
+
 	fmt.Printf("WalletId 1: %s\n", args[0])
 	fmt.Printf("WalletId 2: %s\n", args[1])
 	fmt.Printf("Monto: %s\n", args[2])
 
 	bytesWallet1, err1 := stub.GetState(args[0])
-	
+
 	walletSender := Wallet{}
 	err := json.Unmarshal(bytesWallet1, &walletSender)
-	
+
 	fmt.Println(walletSender)
 	if err1 != nil {
 		fmt.Println("Error retrieving " + args[0])
@@ -240,26 +240,31 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 		fmt.Println("Error retrieving " + args[1])
 		return nil, errors.New("Error retrieving " + args[1])
 	}
-	
-	amt, err := strconv.ParseFloat(args[2], 64)
-	
-	walletSender.Amount = walletSender.Amount-amt //debita el monto
-	walletReceiver.Amount = walletReceiver.Amount+amt //carga el monto
 
-	walletSenderJSONasBytes, _ := json.Marshal(walletSender)
-	err = stub.PutState(args[0], walletSenderJSONasBytes) //rewrite the wallet
-	
-	if err != nil {
-		return nil, err
+	amt, err := strconv.ParseFloat(args[2], 64)
+
+	if amt <= walletSender.Amount {
+
+		walletSender.Amount = walletSender.Amount - amt     //debita el monto
+		walletReceiver.Amount = walletReceiver.Amount + amt //carga el monto
+
+		walletSenderJSONasBytes, _ := json.Marshal(walletSender)
+		err = stub.PutState(args[0], walletSenderJSONasBytes) //rewrite the wallet
+
+		if err != nil {
+			return nil, err
+		}
+
+		walletReceiverJSONasBytes, _ := json.Marshal(walletReceiver)
+		err = stub.PutState(args[1], walletReceiverJSONasBytes) //rewrite the wallet
+		if err != nil {
+			return nil, err
+		}
+
+		return []byte(`{"code":0,"response":null}`), nil
+	} else {
+		return nil,errors.New("No cuentas con suficientes coins para esta transferencia")
 	}
-	
-	walletReceiverJSONasBytes, _ := json.Marshal(walletReceiver)
-	err = stub.PutState(args[1], walletReceiverJSONasBytes) //rewrite the wallet
-	if err != nil {
-		return nil, err
-	}
-	
-	return []byte(`{"code":0,"response":null}`), nil
 }
 
 func (t *SimpleChaincode) getBalance(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
@@ -279,14 +284,14 @@ func (t *SimpleChaincode) getBalance(stub shim.ChaincodeStubInterface, args []st
 	}
 	wallet := Wallet{}
 	err1 := json.Unmarshal(bytes, &wallet)
-	
+
 	fmt.Println(wallet.Amount)
 	if err1 != nil {
 		fmt.Println("Error parseando a Json" + args[0])
 		return nil, errors.New("Error retrieving Balance" + args[0])
 	}
-	
-	return []byte(fmt.Sprintf(`{"code":0,"response":"%s"}`,strconv.FormatFloat(wallet.Amount,'f',6,64))), nil
+
+	return []byte(fmt.Sprintf(`{"code":0,"response":"%s"}`, strconv.FormatFloat(wallet.Amount, 'f', 6, 64))), nil
 }
 
 func (t *SimpleChaincode) getTotalCoin(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
@@ -298,8 +303,8 @@ func (t *SimpleChaincode) getTotalCoin(stub shim.ChaincodeStubInterface, args []
 		fmt.Println("Error retrieving coinBalance")
 		return nil, errors.New("Error retrieving coinBalance")
 	}
-	
-	return []byte(fmt.Sprintf(`{"code":0,"response":"%s"}`,bytes)), nil
+
+	return []byte(fmt.Sprintf(`{"code":0,"response":"%s"}`, bytes)), nil
 }
 
 func safeRandom(dest []byte) {
