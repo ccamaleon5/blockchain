@@ -75,8 +75,8 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	}
 
 	stub.CreateTable(tableColumn, []*shim.ColumnDefinition{
-		&shim.ColumnDefinition{Name: columnID, Type: shim.ColumnDefinition_INT64, Key: true},
-		&shim.ColumnDefinition{Name: columnAccountID, Type: shim.ColumnDefinition_STRING, Key: true},
+		&shim.ColumnDefinition{Name: columnAccountID, Type: shim.ColumnDefinition_STRING, Key: true},	
+		&shim.ColumnDefinition{Name: columnTime, Type: shim.ColumnDefinition_INT64, Key: true},
 		&shim.ColumnDefinition{Name: columnBusiness, Type: shim.ColumnDefinition_STRING, Key: false},
 		&shim.ColumnDefinition{Name: columnAmount, Type: shim.ColumnDefinition_STRING, Key: false},
 		&shim.ColumnDefinition{Name: columnBalance, Type: shim.ColumnDefinition_STRING, Key: false},
@@ -168,17 +168,16 @@ func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []
 	fmt.Printf("%d \n", a)
 
 	col1Val := args[0]
-	col2Val := args[1]
-	col3Val := args[2]
-	col4Val := args[3]
-	col5Val := args[4]
+	col2Val := "Create"
+	col3Val := args[5]
+	col5Val := "C"
 
 	var columns []*shim.Column
 	col0 := shim.Column{Value: &shim.Column_String_{String_: col1Val}}
 	col1 := shim.Column{Value: &shim.Column_Int64{Int64: a}}
 	col2 := shim.Column{Value: &shim.Column_String_{String_: col2Val}}
 	col3 := shim.Column{Value: &shim.Column_String_{String_: col3Val}}
-	col4 := shim.Column{Value: &shim.Column_String_{String_: col4Val}}
+	col4 := shim.Column{Value: &shim.Column_String_{String_: col3Val}}
 	col5 := shim.Column{Value: &shim.Column_String_{String_: col5Val}}
 	columns = append(columns, &col0)
 	columns = append(columns, &col1)
