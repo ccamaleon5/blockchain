@@ -15,6 +15,15 @@ import (
 	"encoding/hex"
 )
 
+const (
+	tableColumn       = "Movimientos"
+	columnAccountID   = "Account"
+	columnBusiness   = "Business"
+	columnAmount = "Amount"
+	columnBalance = "Balance"
+	columnType = "Type"
+)
+
 // UUID layout variants.
 const (
 	VariantNCS = iota
@@ -62,6 +71,14 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	if err != nil {
 		return nil, err
 	}
+	
+	stub.CreateTable(tableColumn, []*shim.ColumnDefinition{
+		&shim.ColumnDefinition{Name: columnAccountID, Type: shim.ColumnDefinition_STRING, Key: true},
+		&shim.ColumnDefinition{Name: columnBusiness, Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: columnAmount, Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: columnBalance, Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: columnType, Type: shim.ColumnDefinition_STRING, Key: false},
+	})
 
 	return nil, nil
 }
@@ -95,8 +112,12 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 	// Manejar diferentes funciones
 	if function == "getbalance" {
 		return t.getBalance(stub, args)
-	} else if function == "gettotalcoin" {
-		return t.getTotalCoin(stub, args)
+	} else{ 
+		if function == "gettotalcoin" {
+			return t.getTotalCoin(stub, args)
+		} else if function == "getmovimientos"{
+			return t.getMovimientos(stub, args)
+		}
 	}
 	fmt.Println("query no encuentra la funcion: " + function)
 
@@ -138,6 +159,34 @@ func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []
 	if err != nil {
 		return nil, err
 	}
+	
+	col1Val := args[0]
+	col2Val := args[1]
+	col3Val := args[2]
+	col4Val := args[3]
+	col5Val := args[4]
+	
+	var columns []*shim.Column
+		col1 := shim.Column{Value: &shim.Column_String_{String_: col1Val}}
+		col2 := shim.Column{Value: &shim.Column_String_{String_: col2Val}}
+		col3 := shim.Column{Value: &shim.Column_String_{String_: col3Val}}
+		col4 := shim.Column{Value: &shim.Column_String_{String_: col4Val}}
+		col5 := shim.Column{Value: &shim.Column_String_{String_: col5Val}}
+		columns = append(columns, &col1)
+		columns = append(columns, &col2)
+		columns = append(columns, &col3)
+		columns = append(columns, &col4)
+		columns = append(columns, &col5)
+
+		row := shim.Row{Columns: columns}
+		ok, err := stub.InsertRow("Movimientos", row)
+		if err != nil {
+			return nil, fmt.Errorf("Insert Row Movimientos operation failed. %s", err)
+		}
+		if !ok {
+			return nil, errors.New("Fallo insertar Row with given key already exists")
+		}
+	
 	return []byte(`{"code":0,"response":null}`), nil
 }
 
@@ -305,6 +354,48 @@ func (t *SimpleChaincode) getTotalCoin(stub shim.ChaincodeStubInterface, args []
 	}
 
 	return []byte(fmt.Sprintf(`{"code":0,"response":"%s"}`, bytes)), nil
+}
+
+func (t *SimpleChaincode) getMovimientos(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	fmt.Println("Call----getMovimientos() is running----")
+
+	if len(args) != 1 {
+		return nil, errors.New("Incorrecto numero de argumentos. Se esperaba 1")
+	}
+
+	walletId := args[0] // wallet id
+	fmt.Println("wallet id is ")
+	fmt.Println(walletId)
+		var columns []shim.Column
+		col1 := shim.Column{Value: &shim.Column_String_{String_: walletId}}
+		columns = append(columns, col1)
+
+		rowChannel, err := stub.GetRows("Movimientos", columns)
+		if err != nil {
+			return nil, fmt.Errorf("getRowTableOne operation failed. %s", err)
+		}
+
+		var rows []shim.Row
+		for {
+			select {
+			case row, ok := <-rowChannel:
+				if !ok {
+					rowChannel = nil
+				} else {
+					rows = append(rows, row)
+				}
+			}
+			if rowChannel == nil {
+				break
+			}
+		}
+
+		jsonRows, err := json.Marshal(rows)
+		if err != nil {
+			return nil, fmt.Errorf("getRowsTableTwo operation failed. Error marshaling JSON: %s", err)
+		}
+
+		return jsonRows, nil
 }
 
 func safeRandom(dest []byte) {
