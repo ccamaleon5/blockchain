@@ -18,7 +18,7 @@ import (
 
 const (
 	tableColumn     = "Movimientos"
-	columnID        = "Id"
+	columnTime      = "Time"
 	columnAccountID = "Account"
 	columnBusiness  = "Business"
 	columnAmount    = "Amount"
