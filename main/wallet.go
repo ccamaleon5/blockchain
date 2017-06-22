@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 
@@ -16,12 +17,13 @@ import (
 )
 
 const (
-	tableColumn       = "Movimientos"
-	columnAccountID   = "Account"
-	columnBusiness   = "Business"
-	columnAmount = "Amount"
-	columnBalance = "Balance"
-	columnType = "Type"
+	tableColumn     = "Movimientos"
+	columnID        = "Id"
+	columnAccountID = "Account"
+	columnBusiness  = "Business"
+	columnAmount    = "Amount"
+	columnBalance   = "Balance"
+	columnType      = "Type"
 )
 
 // UUID layout variants.
@@ -71,8 +73,9 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	if err != nil {
 		return nil, err
 	}
-	
+
 	stub.CreateTable(tableColumn, []*shim.ColumnDefinition{
+		&shim.ColumnDefinition{Name: columnID, Type: shim.ColumnDefinition_INT64, Key: true},
 		&shim.ColumnDefinition{Name: columnAccountID, Type: shim.ColumnDefinition_STRING, Key: true},
 		&shim.ColumnDefinition{Name: columnBusiness, Type: shim.ColumnDefinition_STRING, Key: false},
 		&shim.ColumnDefinition{Name: columnAmount, Type: shim.ColumnDefinition_STRING, Key: false},
@@ -112,10 +115,10 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 	// Manejar diferentes funciones
 	if function == "getbalance" {
 		return t.getBalance(stub, args)
-	} else{ 
+	} else {
 		if function == "gettotalcoin" {
 			return t.getTotalCoin(stub, args)
-		} else if function == "getmovimientos"{
+		} else if function == "getmovimientos" {
 			return t.getMovimientos(stub, args)
 		}
 	}
@@ -159,34 +162,40 @@ func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []
 	if err != nil {
 		return nil, err
 	}
-	
+
+	a := makeTimestamp()
+
+	fmt.Printf("%d \n", a)
+
 	col1Val := args[0]
 	col2Val := args[1]
 	col3Val := args[2]
 	col4Val := args[3]
 	col5Val := args[4]
-	
-	var columns []*shim.Column
-		col1 := shim.Column{Value: &shim.Column_String_{String_: col1Val}}
-		col2 := shim.Column{Value: &shim.Column_String_{String_: col2Val}}
-		col3 := shim.Column{Value: &shim.Column_String_{String_: col3Val}}
-		col4 := shim.Column{Value: &shim.Column_String_{String_: col4Val}}
-		col5 := shim.Column{Value: &shim.Column_String_{String_: col5Val}}
-		columns = append(columns, &col1)
-		columns = append(columns, &col2)
-		columns = append(columns, &col3)
-		columns = append(columns, &col4)
-		columns = append(columns, &col5)
 
-		row := shim.Row{Columns: columns}
-		ok, err := stub.InsertRow("Movimientos", row)
-		if err != nil {
-			return nil, fmt.Errorf("Insert Row Movimientos operation failed. %s", err)
-		}
-		if !ok {
-			return nil, errors.New("Fallo insertar Row with given key already exists")
-		}
-	
+	var columns []*shim.Column
+	col0 := shim.Column{Value: &shim.Column_String_{String_: col1Val}}
+	col1 := shim.Column{Value: &shim.Column_Int64{Int64: a}}
+	col2 := shim.Column{Value: &shim.Column_String_{String_: col2Val}}
+	col3 := shim.Column{Value: &shim.Column_String_{String_: col3Val}}
+	col4 := shim.Column{Value: &shim.Column_String_{String_: col4Val}}
+	col5 := shim.Column{Value: &shim.Column_String_{String_: col5Val}}
+	columns = append(columns, &col0)
+	columns = append(columns, &col1)
+	columns = append(columns, &col2)
+	columns = append(columns, &col3)
+	columns = append(columns, &col4)
+	columns = append(columns, &col5)
+
+	row := shim.Row{Columns: columns}
+	ok, err := stub.InsertRow("Movimientos", row)
+	if err != nil {
+		return nil, fmt.Errorf("Insert Row Movimientos operation failed. %s", err)
+	}
+	if !ok {
+		return nil, errors.New("Fallo insertar Row with given key already exists")
+	}
+
 	return []byte(`{"code":0,"response":null}`), nil
 }
 
@@ -312,7 +321,7 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 
 		return []byte(`{"code":0,"response":null}`), nil
 	} else {
-		return nil,errors.New("No cuentas con suficientes coins para esta transferencia")
+		return nil, errors.New("No cuentas con suficientes coins para esta transferencia")
 	}
 }
 
@@ -366,36 +375,36 @@ func (t *SimpleChaincode) getMovimientos(stub shim.ChaincodeStubInterface, args 
 	walletId := args[0] // wallet id
 	fmt.Println("wallet id is ")
 	fmt.Println(walletId)
-		var columns []shim.Column
-		col1 := shim.Column{Value: &shim.Column_String_{String_: walletId}}
-		columns = append(columns, col1)
+	var columns []shim.Column
+	col1 := shim.Column{Value: &shim.Column_String_{String_: walletId}}
+	columns = append(columns, col1)
 
-		rowChannel, err := stub.GetRows("Movimientos", columns)
-		if err != nil {
-			return nil, fmt.Errorf("getRowTableOne operation failed. %s", err)
-		}
+	rowChannel, err := stub.GetRows("Movimientos", columns)
+	if err != nil {
+		return nil, fmt.Errorf("getRowTableOne operation failed. %s", err)
+	}
 
-		var rows []shim.Row
-		for {
-			select {
-			case row, ok := <-rowChannel:
-				if !ok {
-					rowChannel = nil
-				} else {
-					rows = append(rows, row)
-				}
-			}
-			if rowChannel == nil {
-				break
+	var rows []shim.Row
+	for {
+		select {
+		case row, ok := <-rowChannel:
+			if !ok {
+				rowChannel = nil
+			} else {
+				rows = append(rows, row)
 			}
 		}
-
-		jsonRows, err := json.Marshal(rows)
-		if err != nil {
-			return nil, fmt.Errorf("getRowsTableTwo operation failed. Error marshaling JSON: %s", err)
+		if rowChannel == nil {
+			break
 		}
+	}
 
-		return jsonRows, nil
+	jsonRows, err := json.Marshal(rows)
+	if err != nil {
+		return nil, fmt.Errorf("getRowsTableTwo operation failed. Error marshaling JSON: %s", err)
+	}
+
+	return jsonRows, nil
 }
 
 func safeRandom(dest []byte) {
@@ -456,4 +465,8 @@ func NewV4() UUID {
 	u.SetVariant()
 
 	return u
+}
+
+func makeTimestamp() int64 {
+	return time.Now().UnixNano() / int64(time.Millisecond)
 }
