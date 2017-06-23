@@ -51,6 +51,15 @@ type Wallet struct {
 	Amount   float64 `json:"amount"`
 }
 
+//Movimiento - Structure for movements
+type Movement struct {
+	Time     int64   `json:"time"`
+	WalletId string  `json:"walletid"`
+	Business string  `json:"business"`
+	Amount   float64 `json:"amount"`
+	Balance  float64 `json:"balance"`
+	Type     string  `json:"type"`
+}
 
 // SimpleChaincode example simple Chaincode implementation
 type SimpleChaincode struct {
@@ -410,19 +419,19 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 		columns = append(columns, &col3)
 		columns = append(columns, &col4)
 		columns = append(columns, &col5)
-		
+
 		col1Val = args[0]
 		col2Val = args[1]
 		col3Val = strconv.FormatFloat(amt, 'f', 6, 64)
 		col4Val = strconv.FormatFloat(walletReceiver.Amount-amt, 'f', 6, 64)
 		col5Val = "D"
-		
+
 		col0 = shim.Column{Value: &shim.Column_String_{String_: col1Val}}
 		col2 = shim.Column{Value: &shim.Column_String_{String_: col2Val}}
 		col3 = shim.Column{Value: &shim.Column_String_{String_: col3Val}}
 		col4 = shim.Column{Value: &shim.Column_String_{String_: col4Val}}
 		col5 = shim.Column{Value: &shim.Column_String_{String_: col5Val}}
-		
+
 		columns2 = append(columns2, &col0)
 		columns2 = append(columns2, &col1)
 		columns2 = append(columns2, &col2)
@@ -438,7 +447,7 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 		if !ok {
 			return nil, errors.New("Fallo insertar Row with given key already exists")
 		}
-		
+
 		row2 := shim.Row{Columns: columns2}
 		ok2, err2 := stub.InsertRow("Movimientos", row2)
 		if err2 != nil {
@@ -513,14 +522,24 @@ func (t *SimpleChaincode) getMovimientos(stub shim.ChaincodeStubInterface, args 
 		return nil, fmt.Errorf("getRowTableOne operation failed. %s", err)
 	}
 
-	var rows []shim.Row
+	//movimientos := []Movemen{}
 	for {
 		select {
 		case row, ok := <-rowChannel:
 			if !ok {
 				rowChannel = nil
 			} else {
-				rows = append(rows, row)
+				columnas := row.GetColumns()
+				fmt.Println("Row 1:  %s",columnas[1])
+				fmt.Println("Row 0:  %s",columnas[0])
+				//movimiento := Movement{Time:row.}
+				//Time     int64   `json:"time"`
+	//WalletId string  `json:"walletid"`
+	//Business string  `json:"business"`
+	//Amount   float64 `json:"amount"`
+	//Balance  float64 `json:"balance"`
+	//Type 
+				//movimientos = append(movimientos,movimiento)
 			}
 		}
 		if rowChannel == nil {
@@ -528,12 +547,13 @@ func (t *SimpleChaincode) getMovimientos(stub shim.ChaincodeStubInterface, args 
 		}
 	}
 
-	jsonRows, err := json.Marshal(rows)
+	//jsonRows, err := json.Marshal(rows)
 	if err != nil {
 		return nil, fmt.Errorf("getRows Movimientos operation failed. Error marshaling JSON: %s", err)
 	}
 
-	return jsonRows, nil
+	//return jsonRows, nil
+	return nil, nil
 }
 
 func safeRandom(dest []byte) {
