@@ -522,7 +522,7 @@ func (t *SimpleChaincode) getMovimientos(stub shim.ChaincodeStubInterface, args 
 		return nil, fmt.Errorf("getRowTableOne operation failed. %s", err)
 	}
 
-	//movimientos := []Movemen{}
+	movimientos := []Movement{}
 	for {
 		select {
 		case row, ok := <-rowChannel:
@@ -530,16 +530,15 @@ func (t *SimpleChaincode) getMovimientos(stub shim.ChaincodeStubInterface, args 
 				rowChannel = nil
 			} else {
 				columnas := row.GetColumns()
-				fmt.Println("Row 1:  %s",columnas[1])
-				fmt.Println("Row 0:  %s",columnas[0])
-				//movimiento := Movement{Time:row.}
-				//Time     int64   `json:"time"`
-	//WalletId string  `json:"walletid"`
-	//Business string  `json:"business"`
-	//Amount   float64 `json:"amount"`
-	//Balance  float64 `json:"balance"`
-	//Type 
-				//movimientos = append(movimientos,movimiento)
+				fmt.Println("Row 1:  %d", columnas[1].GetInt64())
+				fmt.Println("Row 0:  %s", columnas[0].GetString_())
+				amountt, _ := strconv.ParseFloat(columnas[3].GetString_(), 64)
+				balancee, _ := strconv.ParseFloat(columnas[4].GetString_(), 64)
+				fmt.Println("Row 3:  %f",amountt)
+				fmt.Println("Row 3:  %f",balancee)
+				movimiento := Movement{Time: columnas[1].GetInt64(), WalletId: columnas[0].GetString_(), Business: columnas[2].GetString_(), Amount:12.4 , Balance: 11.4, Type: columnas[5].GetString_()}
+
+				movimientos = append(movimientos, movimiento)
 			}
 		}
 		if rowChannel == nil {
@@ -547,13 +546,12 @@ func (t *SimpleChaincode) getMovimientos(stub shim.ChaincodeStubInterface, args 
 		}
 	}
 
-	//jsonRows, err := json.Marshal(rows)
+	jsonRows, err := json.Marshal(movimientos)
 	if err != nil {
 		return nil, fmt.Errorf("getRows Movimientos operation failed. Error marshaling JSON: %s", err)
 	}
 
-	//return jsonRows, nil
-	return nil, nil
+	return jsonRows, nil
 }
 
 func safeRandom(dest []byte) {
