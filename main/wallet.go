@@ -51,6 +51,7 @@ type Wallet struct {
 	Amount   float64 `json:"amount"`
 }
 
+
 // SimpleChaincode example simple Chaincode implementation
 type SimpleChaincode struct {
 }
@@ -75,7 +76,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	}
 
 	stub.CreateTable(tableColumn, []*shim.ColumnDefinition{
-		&shim.ColumnDefinition{Name: columnAccountID, Type: shim.ColumnDefinition_STRING, Key: true},	
+		&shim.ColumnDefinition{Name: columnAccountID, Type: shim.ColumnDefinition_STRING, Key: true},
 		&shim.ColumnDefinition{Name: columnTime, Type: shim.ColumnDefinition_INT64, Key: true},
 		&shim.ColumnDefinition{Name: columnBusiness, Type: shim.ColumnDefinition_STRING, Key: false},
 		&shim.ColumnDefinition{Name: columnAmount, Type: shim.ColumnDefinition_STRING, Key: false},
@@ -165,12 +166,12 @@ func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []
 
 	a := makeTimestamp()
 
-	fmt.Printf("%d \n", a)
+	fmt.Printf("Time: %d \n", a)
 
 	col1Val := args[0]
 	col2Val := "Create"
 	col3Val := args[5]
-	col5Val := "C"
+	col5Val := "W"
 
 	var columns []*shim.Column
 	col0 := shim.Column{Value: &shim.Column_String_{String_: col1Val}}
@@ -201,12 +202,13 @@ func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []
 // putBalance - invocar esta funcion incrementar los coins en el balance
 func (t *SimpleChaincode) putBalance(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	fmt.Println("Call---Funcion PutBalance---")
-	if len(args) != 2 {
-		return nil, errors.New("Numero incorrecto de argumentos.Se espera 2 para createWallet")
+	if len(args) != 3 {
+		return nil, errors.New("Numero incorrecto de argumentos.Se espera 3 para putBalance")
 	}
 
 	fmt.Printf("WalletId 1: %s\n", args[0])
 	fmt.Printf("Monto: %s\n", args[1])
+	fmt.Printf("Monto: %s\n", args[2])
 
 	bytesWallet1, err1 := stub.GetState(args[0])
 
@@ -219,7 +221,7 @@ func (t *SimpleChaincode) putBalance(stub shim.ChaincodeStubInterface, args []st
 		return nil, errors.New("Error retrieving " + args[0])
 	}
 
-	amt, err := strconv.ParseFloat(args[1], 64)
+	amt, err := strconv.ParseFloat(args[2], 64)
 
 	walletReceiver.Amount = walletReceiver.Amount + amt //carga coins al balance
 
@@ -230,14 +232,47 @@ func (t *SimpleChaincode) putBalance(stub shim.ChaincodeStubInterface, args []st
 		return nil, err
 	}
 
+	a := makeTimestamp()
+
+	fmt.Printf("Time: %d \n", a)
+
+	col1Val := args[0]
+	col2Val := args[1]
+	col3Val := strconv.FormatFloat(amt, 'f', 6, 64)
+	col4Val := strconv.FormatFloat(walletReceiver.Amount+amt, 'f', 6, 64)
+	col5Val := "C"
+
+	var columns []*shim.Column
+	col0 := shim.Column{Value: &shim.Column_String_{String_: col1Val}}
+	col1 := shim.Column{Value: &shim.Column_Int64{Int64: a}}
+	col2 := shim.Column{Value: &shim.Column_String_{String_: col2Val}}
+	col3 := shim.Column{Value: &shim.Column_String_{String_: col3Val}}
+	col4 := shim.Column{Value: &shim.Column_String_{String_: col4Val}}
+	col5 := shim.Column{Value: &shim.Column_String_{String_: col5Val}}
+	columns = append(columns, &col0)
+	columns = append(columns, &col1)
+	columns = append(columns, &col2)
+	columns = append(columns, &col3)
+	columns = append(columns, &col4)
+	columns = append(columns, &col5)
+
+	row := shim.Row{Columns: columns}
+	ok, err := stub.InsertRow("Movimientos", row)
+	if err != nil {
+		return nil, fmt.Errorf("Insert Row Movimientos operation failed. %s", err)
+	}
+	if !ok {
+		return nil, errors.New("Fallo insertar Row with given key already exists")
+	}
+
 	return []byte(`{"code":0,"response":null}`), nil
 }
 
 // debitBalance - invocar esta funcion debitar coins del balance
 func (t *SimpleChaincode) debitBalance(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	fmt.Println("Call---Funcion DebitBalance---")
-	if len(args) != 2 {
-		return nil, errors.New("Numero incorrecto de argumentos.Se espera 2 para createWallet")
+	if len(args) != 3 {
+		return nil, errors.New("Numero incorrecto de argumentos.Se espera 2 para debitBalance")
 	}
 
 	fmt.Printf("WalletId 1: %s\n", args[0])
@@ -254,7 +289,7 @@ func (t *SimpleChaincode) debitBalance(stub shim.ChaincodeStubInterface, args []
 		return nil, errors.New("Error retrieving " + args[0])
 	}
 
-	amt, err := strconv.ParseFloat(args[1], 64)
+	amt, err := strconv.ParseFloat(args[2], 64)
 
 	walletReceiver.Amount = walletReceiver.Amount - amt //carga coins al balance
 
@@ -263,6 +298,39 @@ func (t *SimpleChaincode) debitBalance(stub shim.ChaincodeStubInterface, args []
 
 	if err != nil {
 		return nil, err
+	}
+
+	a := makeTimestamp()
+
+	fmt.Printf("Time: %d \n", a)
+
+	col1Val := args[0]
+	col2Val := args[1]
+	col3Val := strconv.FormatFloat(amt, 'f', 6, 64)
+	col4Val := strconv.FormatFloat(walletReceiver.Amount-amt, 'f', 6, 64)
+	col5Val := "D"
+
+	var columns []*shim.Column
+	col0 := shim.Column{Value: &shim.Column_String_{String_: col1Val}}
+	col1 := shim.Column{Value: &shim.Column_Int64{Int64: a}}
+	col2 := shim.Column{Value: &shim.Column_String_{String_: col2Val}}
+	col3 := shim.Column{Value: &shim.Column_String_{String_: col3Val}}
+	col4 := shim.Column{Value: &shim.Column_String_{String_: col4Val}}
+	col5 := shim.Column{Value: &shim.Column_String_{String_: col5Val}}
+	columns = append(columns, &col0)
+	columns = append(columns, &col1)
+	columns = append(columns, &col2)
+	columns = append(columns, &col3)
+	columns = append(columns, &col4)
+	columns = append(columns, &col5)
+
+	row := shim.Row{Columns: columns}
+	ok, err := stub.InsertRow("Movimientos", row)
+	if err != nil {
+		return nil, fmt.Errorf("Insert Row Movimientos operation failed. %s", err)
+	}
+	if !ok {
+		return nil, errors.New("Fallo insertar Row with given key already exists")
 	}
 
 	return []byte(`{"code":0,"response":null}`), nil
@@ -316,6 +384,68 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 		err = stub.PutState(args[1], walletReceiverJSONasBytes) //rewrite the wallet
 		if err != nil {
 			return nil, err
+		}
+
+		a := makeTimestamp()
+
+		fmt.Printf("Time: %d \n", a)
+
+		col1Val := args[1]
+		col2Val := args[0]
+		col3Val := strconv.FormatFloat(amt, 'f', 6, 64)
+		col4Val := strconv.FormatFloat(walletReceiver.Amount+amt, 'f', 6, 64)
+		col5Val := "C"
+
+		var columns []*shim.Column
+		var columns2 []*shim.Column
+		col0 := shim.Column{Value: &shim.Column_String_{String_: col1Val}}
+		col1 := shim.Column{Value: &shim.Column_Int64{Int64: a}}
+		col2 := shim.Column{Value: &shim.Column_String_{String_: col2Val}}
+		col3 := shim.Column{Value: &shim.Column_String_{String_: col3Val}}
+		col4 := shim.Column{Value: &shim.Column_String_{String_: col4Val}}
+		col5 := shim.Column{Value: &shim.Column_String_{String_: col5Val}}
+		columns = append(columns, &col0)
+		columns = append(columns, &col1)
+		columns = append(columns, &col2)
+		columns = append(columns, &col3)
+		columns = append(columns, &col4)
+		columns = append(columns, &col5)
+		
+		col1Val = args[0]
+		col2Val = args[1]
+		col3Val = strconv.FormatFloat(amt, 'f', 6, 64)
+		col4Val = strconv.FormatFloat(walletReceiver.Amount-amt, 'f', 6, 64)
+		col5Val = "D"
+		
+		col0 = shim.Column{Value: &shim.Column_String_{String_: col1Val}}
+		col2 = shim.Column{Value: &shim.Column_String_{String_: col2Val}}
+		col3 = shim.Column{Value: &shim.Column_String_{String_: col3Val}}
+		col4 = shim.Column{Value: &shim.Column_String_{String_: col4Val}}
+		col5 = shim.Column{Value: &shim.Column_String_{String_: col5Val}}
+		
+		columns2 = append(columns2, &col0)
+		columns2 = append(columns2, &col1)
+		columns2 = append(columns2, &col2)
+		columns2 = append(columns2, &col3)
+		columns2 = append(columns2, &col4)
+		columns2 = append(columns2, &col5)
+
+		row := shim.Row{Columns: columns}
+		ok, err := stub.InsertRow("Movimientos", row)
+		if err != nil {
+			return nil, fmt.Errorf("Insert Row Movimientos operation failed. %s", err)
+		}
+		if !ok {
+			return nil, errors.New("Fallo insertar Row with given key already exists")
+		}
+		
+		row2 := shim.Row{Columns: columns2}
+		ok2, err2 := stub.InsertRow("Movimientos", row2)
+		if err2 != nil {
+			return nil, fmt.Errorf("Insert Row2 Movimientos operation failed. %s", err2)
+		}
+		if !ok2 {
+			return nil, errors.New("Fallo insertar Row2 with given key already exists")
 		}
 
 		return []byte(`{"code":0,"response":null}`), nil
@@ -400,7 +530,7 @@ func (t *SimpleChaincode) getMovimientos(stub shim.ChaincodeStubInterface, args 
 
 	jsonRows, err := json.Marshal(rows)
 	if err != nil {
-		return nil, fmt.Errorf("getRowsTableTwo operation failed. Error marshaling JSON: %s", err)
+		return nil, fmt.Errorf("getRows Movimientos operation failed. Error marshaling JSON: %s", err)
 	}
 
 	return jsonRows, nil
