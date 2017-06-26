@@ -248,7 +248,7 @@ func (t *SimpleChaincode) putBalance(stub shim.ChaincodeStubInterface, args []st
 	col1Val := args[0]
 	col2Val := args[1]
 	col3Val := strconv.FormatFloat(amt, 'f', 6, 64)
-	col4Val := strconv.FormatFloat(walletReceiver.Amount+amt, 'f', 6, 64)
+	col4Val := strconv.FormatFloat(walletReceiver.Amount, 'f', 6, 64)
 	col5Val := "C"
 
 	var columns []*shim.Column
@@ -316,7 +316,7 @@ func (t *SimpleChaincode) debitBalance(stub shim.ChaincodeStubInterface, args []
 	col1Val := args[0]
 	col2Val := args[1]
 	col3Val := strconv.FormatFloat(amt, 'f', 6, 64)
-	col4Val := strconv.FormatFloat(walletReceiver.Amount-amt, 'f', 6, 64)
+	col4Val := strconv.FormatFloat(walletReceiver.Amount, 'f', 6, 64)
 	col5Val := "D"
 
 	var columns []*shim.Column
@@ -361,11 +361,11 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 	walletSender := Wallet{}
 	err := json.Unmarshal(bytesWallet1, &walletSender)
 
-	fmt.Println(walletSender)
 	if err1 != nil {
 		fmt.Println("Error retrieving " + args[1])
 		return nil, errors.New("Error retrieving " + args[1])
 	}
+	fmt.Println(walletSender)
 
 	bytesWallet2, err2 := stub.GetState(args[0])
 	walletReceiver := Wallet{}
@@ -374,11 +374,11 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 		fmt.Println("Error retrieving " + args[0])
 		return nil, errors.New("Error retrieving " + args[0])
 	}
+	fmt.Println(walletReceiver)
 
 	amt, err := strconv.ParseFloat(args[2], 64)
 
 	if amt <= walletSender.Amount {
-
 		walletSender.Amount = walletSender.Amount - amt     //debita el monto
 		walletReceiver.Amount = walletReceiver.Amount + amt //carga el monto
 
@@ -386,12 +386,14 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 		err = stub.PutState(args[1], walletSenderJSONasBytes) //rewrite the wallet
 
 		if err != nil {
+			fmt.Println("Error guardar el Sender")
 			return nil, err
 		}
 
 		walletReceiverJSONasBytes, _ := json.Marshal(walletReceiver)
 		err = stub.PutState(args[0], walletReceiverJSONasBytes) //rewrite the wallet
 		if err != nil {
+			fmt.Println("Error guardar el Recceiver")
 			return nil, err
 		}
 
@@ -402,7 +404,7 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 		col1Val := args[0]
 		col2Val := args[1]
 		col3Val := strconv.FormatFloat(amt, 'f', 6, 64)
-		col4Val := strconv.FormatFloat(walletReceiver.Amount+amt, 'f', 6, 64)
+		col4Val := strconv.FormatFloat(walletReceiver.Amount, 'f', 6, 64)
 		col5Val := "C"
 
 		var columns []*shim.Column
@@ -423,7 +425,7 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 		col1Val = args[1]
 		col2Val = args[0]
 		col3Val = strconv.FormatFloat(amt, 'f', 6, 64)
-		col4Val = strconv.FormatFloat(walletReceiver.Amount-amt, 'f', 6, 64)
+		col4Val = strconv.FormatFloat(walletReceiver.Amount, 'f', 6, 64)
 		col5Val = "D"
 
 		col0 = shim.Column{Value: &shim.Column_String_{String_: col1Val}}
@@ -442,20 +444,26 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 		row := shim.Row{Columns: columns}
 		ok, err := stub.InsertRow("Movimientos", row)
 		if err != nil {
+			fmt.Println("Error al insertar la fila de sender")
 			return nil, fmt.Errorf("Insert Row Movimientos operation failed. %s", err)
 		}
 		if !ok {
 			return nil, errors.New("Fallo insertar Row with given key already exists")
 		}
+		
+		fmt.Println("Inserto Fila de Sender")
 
 		row2 := shim.Row{Columns: columns2}
 		ok2, err2 := stub.InsertRow("Movimientos", row2)
 		if err2 != nil {
+			fmt.Println("Error al insertar la fila de receiver")
 			return nil, fmt.Errorf("Insert Row2 Movimientos operation failed. %s", err2)
 		}
 		if !ok2 {
 			return nil, errors.New("Fallo insertar Row2 with given key already exists")
 		}
+		
+		fmt.Println("Inserto fila de receiver")
 
 		return []byte(`{"code":0,"response":null}`), nil
 	} else {
