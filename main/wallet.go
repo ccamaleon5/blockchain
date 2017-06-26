@@ -352,27 +352,27 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 		return nil, errors.New("Numero incorrecto de argumentos.Se espera 3 para createWallet")
 	}
 
-	fmt.Printf("WalletId 1: %s\n", args[0])
-	fmt.Printf("WalletId 2: %s\n", args[1])
+	fmt.Printf("WalletId 1: %s\n", args[1])
+	fmt.Printf("WalletId 2: %s\n", args[0])
 	fmt.Printf("Monto: %s\n", args[2])
 
-	bytesWallet1, err1 := stub.GetState(args[0])
+	bytesWallet1, err1 := stub.GetState(args[1])
 
 	walletSender := Wallet{}
 	err := json.Unmarshal(bytesWallet1, &walletSender)
 
 	fmt.Println(walletSender)
 	if err1 != nil {
-		fmt.Println("Error retrieving " + args[0])
-		return nil, errors.New("Error retrieving " + args[0])
+		fmt.Println("Error retrieving " + args[1])
+		return nil, errors.New("Error retrieving " + args[1])
 	}
 
-	bytesWallet2, err2 := stub.GetState(args[1])
+	bytesWallet2, err2 := stub.GetState(args[0])
 	walletReceiver := Wallet{}
 	err = json.Unmarshal(bytesWallet2, &walletReceiver)
 	if err2 != nil {
-		fmt.Println("Error retrieving " + args[1])
-		return nil, errors.New("Error retrieving " + args[1])
+		fmt.Println("Error retrieving " + args[0])
+		return nil, errors.New("Error retrieving " + args[0])
 	}
 
 	amt, err := strconv.ParseFloat(args[2], 64)
@@ -383,14 +383,14 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 		walletReceiver.Amount = walletReceiver.Amount + amt //carga el monto
 
 		walletSenderJSONasBytes, _ := json.Marshal(walletSender)
-		err = stub.PutState(args[0], walletSenderJSONasBytes) //rewrite the wallet
+		err = stub.PutState(args[1], walletSenderJSONasBytes) //rewrite the wallet
 
 		if err != nil {
 			return nil, err
 		}
 
 		walletReceiverJSONasBytes, _ := json.Marshal(walletReceiver)
-		err = stub.PutState(args[1], walletReceiverJSONasBytes) //rewrite the wallet
+		err = stub.PutState(args[0], walletReceiverJSONasBytes) //rewrite the wallet
 		if err != nil {
 			return nil, err
 		}
@@ -399,8 +399,8 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 
 		fmt.Printf("Time: %d \n", a)
 
-		col1Val := args[1]
-		col2Val := args[0]
+		col1Val := args[0]
+		col2Val := args[1]
 		col3Val := strconv.FormatFloat(amt, 'f', 6, 64)
 		col4Val := strconv.FormatFloat(walletReceiver.Amount+amt, 'f', 6, 64)
 		col5Val := "C"
@@ -420,8 +420,8 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 		columns = append(columns, &col4)
 		columns = append(columns, &col5)
 
-		col1Val = args[0]
-		col2Val = args[1]
+		col1Val = args[1]
+		col2Val = args[0]
 		col3Val = strconv.FormatFloat(amt, 'f', 6, 64)
 		col4Val = strconv.FormatFloat(walletReceiver.Amount-amt, 'f', 6, 64)
 		col5Val = "D"
@@ -493,14 +493,14 @@ func (t *SimpleChaincode) getBalance(stub shim.ChaincodeStubInterface, args []st
 func (t *SimpleChaincode) getTotalCoin(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	fmt.Println("Call----getTotalCoin() is running----")
 
-	bytes, err := stub.GetState("coinBalance")
-	fmt.Println(bytes)
+	coinBalance, err := stub.GetState("coinBalance")
+	fmt.Println(coinBalance)
 	if err != nil {
 		fmt.Println("Error retrieving coinBalance")
 		return nil, errors.New("Error retrieving coinBalance")
 	}
 
-	return []byte(fmt.Sprintf(`{"code":0,"response":"%s"}`, bytes)), nil
+	return []byte(fmt.Sprintf(`{"code":0,"response":"%s"}`, coinBalance)), nil
 }
 
 func (t *SimpleChaincode) getMovimientos(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
@@ -530,13 +530,9 @@ func (t *SimpleChaincode) getMovimientos(stub shim.ChaincodeStubInterface, args 
 				rowChannel = nil
 			} else {
 				columnas := row.GetColumns()
-				fmt.Println("Row 1:  %d", columnas[1].GetInt64())
-				fmt.Println("Row 0:  %s", columnas[0].GetString_())
-				amountt, _ := strconv.ParseFloat(columnas[3].GetString_(), 64)
-				balancee, _ := strconv.ParseFloat(columnas[4].GetString_(), 64)
-				fmt.Println("Row 3:  %f",amountt)
-				fmt.Println("Row 3:  %f",balancee)
-				movimiento := Movement{Time: columnas[1].GetInt64(), WalletId: columnas[0].GetString_(), Business: columnas[2].GetString_(), Amount:12.4 , Balance: 11.4, Type: columnas[5].GetString_()}
+				amountRow, _ := strconv.ParseFloat(columnas[3].GetString_(), 64)
+				balanceRow, _ := strconv.ParseFloat(columnas[4].GetString_(), 64)
+				movimiento := Movement{Time: columnas[1].GetInt64(), WalletId: columnas[0].GetString_(), Business: columnas[2].GetString_(), Amount: amountRow, Balance: balanceRow, Type: columnas[5].GetString_()}
 
 				movimientos = append(movimientos, movimiento)
 			}
