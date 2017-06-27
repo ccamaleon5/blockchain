@@ -1,5 +1,5 @@
 /*
-  Vivanda Smart Contract
+  Cineplanet Smart Contract
   Adrian Pareja
 */
 package main
@@ -17,7 +17,7 @@ import (
 	"encoding/hex"
 )
 
-const business string = "Vivanda"
+const business string = "Cineplanet"
 const walletContract string = "78beccdaa807b6dcb015768de51616bf70fcda92ddae7fbd8a2f254a875117a107ce325ca92a268482e2cf0c5a375d42343718f405a8876c50574478daa666be"
 
 // UUID layout variants.
@@ -56,10 +56,10 @@ type SimpleChaincode struct {
 }
 
 func main() {
-	fmt.Printf("Iniciandooo Contrato Vivanda....")
+	fmt.Printf("Iniciandooo Contrato Cineplanet....")
 	err := shim.Start(new(SimpleChaincode))
 	if err != nil {
-		fmt.Printf("Error Iniciando Vivanda Smart Contract: %s", err)
+		fmt.Printf("Error Iniciando Cineplanet Smart Contract: %s", err)
 	}
 }
 
@@ -134,7 +134,7 @@ func (t *SimpleChaincode) buy(stub shim.ChaincodeStubInterface, args []string) (
 		return nil, errors.New("Numero incorrecto de argumentos.Se espera 3 para buy")
 	}
 
-	var change float64 = 2
+	var change float64 = 1
 	
 	soles, err := strconv.ParseFloat(args[1], 64)
 	if err != nil {
