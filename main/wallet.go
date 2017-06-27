@@ -131,7 +131,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 		} else {
 			if function == "getmovimientos" {
 				return t.getMovimientos(stub, args)
-			} else if function == "getDatos" {
+			} else if function == "getdatos" {
 				return t.getDatos(stub, args)
 			}
 		}
@@ -426,9 +426,8 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 		columns = append(columns, &col4)
 		columns = append(columns, &col5)
 
-		b := makeTimestamp()
-
-		fmt.Printf("Time: %d \n", b)
+		b := a+1
+		
 		col1Val = args[1]
 		col2Val = args[0]
 		col3Val = strconv.FormatFloat(amt, 'f', 6, 64)
@@ -591,7 +590,7 @@ func (t *SimpleChaincode) getDatos(stub shim.ChaincodeStubInterface, args []stri
 		return nil, errors.New("Error retrieving Balance" + args[0])
 	}
 
-	return []byte(fmt.Sprintf(`{"code":0,"response":"%s"}`, wallet)), nil
+	return bytes, nil
 }
 
 func safeRandom(dest []byte) {
