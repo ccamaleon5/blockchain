@@ -425,8 +425,22 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 		columns = append(columns, &col3)
 		columns = append(columns, &col4)
 		columns = append(columns, &col5)
+		
+		row := shim.Row{Columns: columns}
+		ok, err := stub.InsertRow("Movimientos", row)
+		if err != nil {
+			fmt.Println("Error al insertar la fila de sender")
+			return nil, fmt.Errorf("Insert Row Movimientos operation failed. %s", err)
+		}
+		if !ok {
+			return nil, errors.New("Fallo insertar Row with given key already exists")
+		}
+
+		fmt.Println("Inserto Fila de Sender")
 
 		b := a+1
+		
+		fmt.Printf("Time: %d \n", b)
 		
 		col1Val = args[1]
 		col2Val = args[0]
@@ -447,18 +461,6 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 		columns2 = append(columns2, &col3)
 		columns2 = append(columns2, &col4)
 		columns2 = append(columns2, &col5)
-
-		row := shim.Row{Columns: columns}
-		ok, err := stub.InsertRow("Movimientos", row)
-		if err != nil {
-			fmt.Println("Error al insertar la fila de sender")
-			return nil, fmt.Errorf("Insert Row Movimientos operation failed. %s", err)
-		}
-		if !ok {
-			return nil, errors.New("Fallo insertar Row with given key already exists")
-		}
-
-		fmt.Println("Inserto Fila de Sender")
 
 		row2 := shim.Row{Columns: columns2}
 		ok2, err2 := stub.InsertRow("Movimientos", row2)
