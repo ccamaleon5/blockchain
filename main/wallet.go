@@ -147,6 +147,12 @@ func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []
 	if len(args) != 6 {
 		return nil, errors.New("Numero incorrecto de argumentos.Se espera 6 para createWallet")
 	}
+	
+	bytesWallet, err1 := stub.GetState(args[0])
+	if err1 == nil{
+		fmt.println("Ya existe el wallet con id %s",args[0])
+		return nil,errors.New("El wallet ya existe")
+	}
 
 	walletId := NewV4()
 	fmt.Printf("UUIDv4: %s\n", walletId)
@@ -445,7 +451,7 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 		col1Val = args[1]
 		col2Val = args[0]
 		col3Val = strconv.FormatFloat(amt, 'f', 6, 64)
-		col4Val = strconv.FormatFloat(walletReceiver.Amount, 'f', 6, 64)
+		col4Val = strconv.FormatFloat(walletSender.Amount, 'f', 6, 64)
 		col5Val = "D"
 
 		col0 = shim.Column{Value: &shim.Column_String_{String_: col1Val}}
