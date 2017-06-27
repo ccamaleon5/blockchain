@@ -149,8 +149,8 @@ func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []
 	}
 	
 	bytesWallet, err1 := stub.GetState(args[0])
-	if err1 == nil{
-		fmt.println("Ya existe el wallet con id %s",args[0])
+	if err1 == nil || bytesWallet != nil {
+		fmt.Println("Ya existe el wallet con id %s",args[0])
 		return nil,errors.New("El wallet ya existe")
 	}
 
