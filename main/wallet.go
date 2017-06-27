@@ -422,6 +422,7 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 		columns = append(columns, &col4)
 		columns = append(columns, &col5)
 
+		a = a + 1
 		col1Val = args[1]
 		col2Val = args[0]
 		col3Val = strconv.FormatFloat(amt, 'f', 6, 64)
@@ -556,6 +557,34 @@ func (t *SimpleChaincode) getMovimientos(stub shim.ChaincodeStubInterface, args 
 	}
 
 	return jsonRows, nil
+}
+
+//getData - Obtiene los datos generales del usuario
+func (t *SimpleChaincode) getDatos(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	fmt.Println("Call----getDatos() is running----")
+
+	if len(args) != 1 {
+		return nil, errors.New("Incorrecto numero de argumentos. Se esperaba 1")
+	}
+
+	walletId := args[0] // wallet id
+	fmt.Println("wallet id is")
+	fmt.Println(walletId)
+	bytes, err := stub.GetState(args[0])
+	if err != nil {
+		fmt.Println("Error retrieving " + walletId)
+		return nil, errors.New("Error retrieving " + walletId)
+	}
+	wallet := Wallet{}
+	err1 := json.Unmarshal(bytes, &wallet)
+
+	fmt.Println(wallet)
+	if err1 != nil {
+		fmt.Println("Error parseando a Json" + args[0])
+		return nil, errors.New("Error retrieving Balance" + args[0])
+	}
+
+	return []byte(fmt.Sprintf(`{"code":0,"response":"%s"}`, wallet)), nil
 }
 
 func safeRandom(dest []byte) {
