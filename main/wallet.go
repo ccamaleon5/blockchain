@@ -128,8 +128,12 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 	} else {
 		if function == "gettotalcoin" {
 			return t.getTotalCoin(stub, args)
-		} else if function == "getmovimientos" {
-			return t.getMovimientos(stub, args)
+		} else {
+			if function == "getmovimientos" {
+				return t.getMovimientos(stub, args)
+			} else if function == "getDatos" {
+				return t.getDatos(stub, args)
+			}
 		}
 	}
 	fmt.Println("query no encuentra la funcion: " + function)
@@ -422,7 +426,9 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 		columns = append(columns, &col4)
 		columns = append(columns, &col5)
 
-		a = a + 1
+		b := makeTimestamp()
+
+		fmt.Printf("Time: %d \n", b)
 		col1Val = args[1]
 		col2Val = args[0]
 		col3Val = strconv.FormatFloat(amt, 'f', 6, 64)
@@ -430,6 +436,7 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 		col5Val = "D"
 
 		col0 = shim.Column{Value: &shim.Column_String_{String_: col1Val}}
+		col1 = shim.Column{Value: &shim.Column_Int64{Int64: b}}
 		col2 = shim.Column{Value: &shim.Column_String_{String_: col2Val}}
 		col3 = shim.Column{Value: &shim.Column_String_{String_: col3Val}}
 		col4 = shim.Column{Value: &shim.Column_String_{String_: col4Val}}
@@ -451,7 +458,7 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 		if !ok {
 			return nil, errors.New("Fallo insertar Row with given key already exists")
 		}
-		
+
 		fmt.Println("Inserto Fila de Sender")
 
 		row2 := shim.Row{Columns: columns2}
@@ -463,7 +470,7 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 		if !ok2 {
 			return nil, errors.New("Fallo insertar Row2 with given key already exists")
 		}
-		
+
 		fmt.Println("Inserto fila de receiver")
 
 		return []byte(`{"code":0,"response":null}`), nil
