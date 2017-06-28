@@ -18,7 +18,7 @@ import (
 )
 
 const business string = "Vivanda"
-const walletContract string = "78beccdaa807b6dcb015768de51616bf70fcda92ddae7fbd8a2f254a875117a107ce325ca92a268482e2cf0c5a375d42343718f405a8876c50574478daa666be"
+const walletContract string = "db46388d0684ace40e855d45b16e8f4dfb7835a73c20ba5105facbad3b3e40914f168639058c85f8ab5017271cc9f68e8f17a8bff80925849fbf468ae5910a0d"
 
 // UUID layout variants.
 const (
