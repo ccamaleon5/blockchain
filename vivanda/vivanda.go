@@ -18,7 +18,7 @@ import (
 )
 
 const business string = "Vivanda"
-const walletContract string = "e966457f41cb31cb21dd1f69d7809f9b1ac9437f2daf913f8c94d0047694e4ccf6ccd298a526978af8fef9d942ef90e3cdfd4fd2acf7f2a35121f5540d23d6fd"
+const walletContract string = "78beccdaa807b6dcb015768de51616bf70fcda92ddae7fbd8a2f254a875117a107ce325ca92a268482e2cf0c5a375d42343718f405a8876c50574478daa666be"
 
 // UUID layout variants.
 const (
@@ -136,11 +136,11 @@ func (t *SimpleChaincode) buy(stub shim.ChaincodeStubInterface, args []string) (
 
 	var change float64 = 2
 	
-	soles, err := strconv.ParseFloat(args[1], 64)
+	solesTotal, err := strconv.ParseFloat(args[1], 64)
 	if err != nil {
 		errStr := fmt.Sprintf("Fallo convertir cadena a float: %s", err.Error())
 		return nil, errors.New(errStr)
-	}
+	} 
 	
 	coins, err1 := strconv.ParseFloat(args[2], 64)
 	if err1 != nil {
@@ -163,8 +163,10 @@ func (t *SimpleChaincode) buy(stub shim.ChaincodeStubInterface, args []string) (
 	
 	f = "debitbalance"
 	
-	//Compra soles y canje coins
-	if soles > 0 && coins > 0 {
+	solesSubtotal := (solesTotal * change) - coins  //Cambiando a Coins
+	
+	//Compra soles subtotal y canje coins
+	if solesSubtotal > 0 && coins > 0 {
 		
 		coinBalance,_ := strconv.ParseFloat(responseContract.Response, 64)
 		
@@ -172,7 +174,7 @@ func (t *SimpleChaincode) buy(stub shim.ChaincodeStubInterface, args []string) (
 			return nil,errors.New("El cliente no cuenta con coins suficientes")
 		}
 			
-		coins = (soles * change) - coins
+		coins = solesSubtotal - coins 
 		if coins < 0 {
 			coins = coins*-1
 			f = "debitbalance"
@@ -180,9 +182,9 @@ func (t *SimpleChaincode) buy(stub shim.ChaincodeStubInterface, args []string) (
 			f = "putbalance"
 		}
 	} else {
-		if soles > 0 {  //Compra Soles
+		if solesSubtotal > 0 {  //Compra Soles
 			f = "putbalance"					
-			coins = soles * change
+			coins = solesTotal * change
 		}else if coins > 0 {  //Canje Coins
 			coinBalance,_ := strconv.ParseFloat(responseContract.Response, 64)
 			if coinBalance <= coins {

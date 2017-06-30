@@ -156,7 +156,7 @@ func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []
 
 	walletId := NewV4()
 	fmt.Printf("UUIDv4: %s\n", walletId)
-	amt, err := strconv.ParseFloat(args[5], 64)
+	amt, err := strconv.ParseFloat("0", 64)
 
 	if err != nil {
 		fmt.Println("Error Float parsing")

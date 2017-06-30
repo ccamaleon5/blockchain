@@ -79,7 +79,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 
 // Invoke Punto de entrada a cualquier función del ledger
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-	fmt.Println("Vivanda invoke is running..FUNCTION:" + function)
+	fmt.Println("Cineplanet invoke is running..FUNCTION:" + function)
 
 	if function == "createwallet" {
 		return t.createWallet(stub, args)
@@ -93,7 +93,7 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 
 // Query es nuestro punto de entrada de querys
 func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-	fmt.Println("Vivanda query is running FUNCTION:" + function)
+	fmt.Println("Cineplanet query is running FUNCTION:" + function)
 
 	// Manejar diferentes funciones
 	if function == "getbalance" {
@@ -106,7 +106,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 
 // createWallet - invocar esta funcion para crear un wallet con saldo inicial
 func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	fmt.Println("Vivanda Call---Funcion createWallet---")
+	fmt.Println("Cineplanet Call---Funcion createWallet---")
 	
 	if len(args) != 5 {
 		return nil, errors.New("Numero incorrecto de argumentos.Se espera 5 para createWallet")
@@ -128,7 +128,7 @@ func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []
 
 // createWallet - invocar esta funcion para crear un wallet con saldo inicial
 func (t *SimpleChaincode) buy(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	fmt.Println("Vivanda Call---Funcion Buy---")
+	fmt.Println("Cineplanet Call---Funcion Buy---")
 	
 	if len(args) != 3 {
 		return nil, errors.New("Numero incorrecto de argumentos.Se espera 3 para buy")
@@ -136,11 +136,11 @@ func (t *SimpleChaincode) buy(stub shim.ChaincodeStubInterface, args []string) (
 
 	var change float64 = 1
 	
-	soles, err := strconv.ParseFloat(args[1], 64)
+	solesTotal, err := strconv.ParseFloat(args[1], 64)
 	if err != nil {
 		errStr := fmt.Sprintf("Fallo convertir cadena a float: %s", err.Error())
 		return nil, errors.New(errStr)
-	}
+	} 
 	
 	coins, err1 := strconv.ParseFloat(args[2], 64)
 	if err1 != nil {
@@ -163,8 +163,10 @@ func (t *SimpleChaincode) buy(stub shim.ChaincodeStubInterface, args []string) (
 	
 	f = "debitbalance"
 	
-	//Compra soles y canje coins
-	if soles > 0 && coins > 0 {
+	solesSubtotal := (solesTotal * change) - coins  //Cambiando a Coins
+	
+	//Compra soles subtotal y canje coins
+	if solesSubtotal > 0 && coins > 0 {
 		
 		coinBalance,_ := strconv.ParseFloat(responseContract.Response, 64)
 		
@@ -172,7 +174,7 @@ func (t *SimpleChaincode) buy(stub shim.ChaincodeStubInterface, args []string) (
 			return nil,errors.New("El cliente no cuenta con coins suficientes")
 		}
 			
-		coins = (soles * change) - coins
+		coins = solesSubtotal - coins 
 		if coins < 0 {
 			coins = coins*-1
 			f = "debitbalance"
@@ -180,9 +182,9 @@ func (t *SimpleChaincode) buy(stub shim.ChaincodeStubInterface, args []string) (
 			f = "putbalance"
 		}
 	} else {
-		if soles > 0 {  //Compra Soles
+		if solesSubtotal > 0 {  //Compra Soles
 			f = "putbalance"					
-			coins = soles * change
+			coins = solesTotal * change
 		}else if coins > 0 {  //Canje Coins
 			coinBalance,_ := strconv.ParseFloat(responseContract.Response, 64)
 			if coinBalance <= coins {
@@ -206,7 +208,7 @@ func (t *SimpleChaincode) buy(stub shim.ChaincodeStubInterface, args []string) (
 }
 
 func (t *SimpleChaincode) getBalance(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	fmt.Println("Vivanda----getBalance() is running----")
+	fmt.Println("Cineplanet----getBalance() is running----")
 	
 	if len(args) != 1 {
 		return nil, errors.New("Numero incorrecto de argumentos.Se espera 1 para getBalance")
