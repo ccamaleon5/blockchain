@@ -140,7 +140,7 @@ func (t *SimpleChaincode) buy(stub shim.ChaincodeStubInterface, args []string) (
 	if err != nil {
 		errStr := fmt.Sprintf("Fallo convertir cadena a float: %s", err.Error())
 		return nil, errors.New(errStr)
-	} 
+	}
 	
 	coins, err1 := strconv.ParseFloat(args[2], 64)
 	if err1 != nil {
