@@ -189,7 +189,7 @@ func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []
 
 	col1Val := args[0]
 	col2Val := "Create"
-	col3Val := args[5]
+	col3Val := "0"
 	col5Val := "W"
 
 	var columns []*shim.Column
