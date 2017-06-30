@@ -18,7 +18,7 @@ import (
 )
 
 const business string = "Promart"
-const walletContract string = "e966457f41cb31cb21dd1f69d7809f9b1ac9437f2daf913f8c94d0047694e4ccf6ccd298a526978af8fef9d942ef90e3cdfd4fd2acf7f2a35121f5540d23d6fd"
+const walletContract string = "6396658f83db71736892f9a4f4f54ee3e7c33971db8c2694e4f4789751fe21d97331e4a3ac58aa6b80add46f0ab807ac207216b522a72baef0fb2e4e7cb2eb72"
 
 // UUID layout variants.
 const (
