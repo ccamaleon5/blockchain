@@ -174,7 +174,7 @@ func (t *SimpleChaincode) buy(stub shim.ChaincodeStubInterface, args []string) (
 			return nil,errors.New("El cliente no cuenta con coins suficientes")
 		}
 			
-		coins = solesSubtotal - coins 
+		coins = solesSubtotal //- coins 
 		if coins < 0 {
 			coins = coins*-1
 			f = "debitbalance"
