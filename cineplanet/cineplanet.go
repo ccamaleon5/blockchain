@@ -56,7 +56,7 @@ type SimpleChaincode struct {
 }
 
 func main() {
-	fmt.Printf("Iniciandooo Contrato Cineplanet....")
+	fmt.Printf("Iniciandooo Contrato Cineplanet.....")
 	err := shim.Start(new(SimpleChaincode))
 	if err != nil {
 		fmt.Printf("Error Iniciando Cineplanet Smart Contract: %s", err)
