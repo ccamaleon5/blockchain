@@ -173,7 +173,19 @@ func (t *SimpleChaincode) buy(stub shim.ChaincodeStubInterface, args []string) (
 		if  coinBalance <= coins {
 			return nil,errors.New("El cliente no cuenta con coins suficientes")
 		}
-			
+		
+		//Debitar Coins
+		invokeArgs2 := util.ToChaincodeArgs(f, args[0], business, strconv.FormatFloat(coins, 'f', 6, 64))
+		response2, err6 := stub.InvokeChaincode(walletContract, invokeArgs2)
+		if err6 != nil {
+			errStr := fmt.Sprintf("Failed to invoke chaincode. Got error: %s", err6.Error())
+			fmt.Printf(errStr)
+			return nil, errors.New(errStr)
+		}
+
+		fmt.Printf("Invoke chaincode successful. Got response %s", string(response2))
+		
+		//Cargar Coins
 		coins = solesSubtotal //- coins 
 		if coins < 0 {
 			coins = coins*-1
