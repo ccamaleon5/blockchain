@@ -37,18 +37,18 @@ type UUID [16]byte
 
 //Wallet - Structure for products used in buy goods
 type Wallet struct {
-	Id        string    `json:"id"`
-	Email     string  `json:"email"`
-	Phone     string  `json:"phone"`
-	Document  string `json:"document"`
-	Password  string `json:"password"` 
-	Amount    float64 `json:"amount"` 
+	Id       string  `json:"id"`
+	Email    string  `json:"email"`
+	Phone    string  `json:"phone"`
+	Document string  `json:"document"`
+	Password string  `json:"password"`
+	Amount   float64 `json:"amount"`
 }
 
 //Response - Structure for response
 type ResponseContract struct {
-	Code        int32    `json:"code"`
-	Response    string  `json:"response"` 
+	Code     int32  `json:"code"`
+	Response string `json:"response"`
 }
 
 // SimpleChaincode example simple Chaincode implementation
@@ -107,7 +107,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 // createWallet - invocar esta funcion para crear un wallet con saldo inicial
 func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	fmt.Println("Vivanda Call---Funcion createWallet---")
-	
+
 	if len(args) != 5 {
 		return nil, errors.New("Numero incorrecto de argumentos.Se espera 5 para createWallet")
 	}
@@ -129,25 +129,25 @@ func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []
 // createWallet - invocar esta funcion para crear un wallet con saldo inicial
 func (t *SimpleChaincode) buy(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	fmt.Println("Vivanda Call---Funcion Buy---")
-	
+
 	if len(args) != 3 {
 		return nil, errors.New("Numero incorrecto de argumentos.Se espera 3 para buy")
 	}
 
 	var change float64 = 2
-	
+
 	solesTotal, err := strconv.ParseFloat(args[1], 64)
 	if err != nil {
 		errStr := fmt.Sprintf("Fallo convertir cadena a float: %s", err.Error())
 		return nil, errors.New(errStr)
-	} 
-	
+	}
+
 	coins, err1 := strconv.ParseFloat(args[2], 64)
 	if err1 != nil {
 		errStr := fmt.Sprintf("Fallo convertir cadena a float: %s", err.Error())
 		return nil, errors.New(errStr)
 	}
-	
+
 	f := "getbalance"
 	queryArgs := util.ToChaincodeArgs(f, args[0])
 	responseQuery, err2 := stub.QueryChaincode(walletContract, queryArgs)
@@ -160,41 +160,53 @@ func (t *SimpleChaincode) buy(stub shim.ChaincodeStubInterface, args []string) (
 
 	responseContract := ResponseContract{}
 	err1 = json.Unmarshal(responseQuery, &responseContract)
-	
+
 	f = "debitbalance"
-	
-	solesSubtotal := (solesTotal * change) - coins  //Cambiando a Coins
-	
+
+	solesSubtotal := (solesTotal * change) - coins //Cambiando a Coins
+
 	//Compra soles subtotal y canje coins
 	if solesSubtotal > 0 && coins > 0 {
-		
-		coinBalance,_ := strconv.ParseFloat(responseContract.Response, 64)
-		
-		if  coinBalance <= coins {
-			return nil,errors.New("El cliente no cuenta con coins suficientes")
+
+		coinBalance, _ := strconv.ParseFloat(responseContract.Response, 64)
+
+		if coinBalance <= coins {
+			return nil, errors.New("El cliente no cuenta con coins suficientes")
 		}
-			
-		coins = solesSubtotal //- coins 
+
+		//Debitar Coins
+		invokeArgs2 := util.ToChaincodeArgs(f, args[0], business, strconv.FormatFloat(coins, 'f', 6, 64))
+		response2, err6 := stub.InvokeChaincode(walletContract, invokeArgs2)
+		if err6 != nil {
+			errStr := fmt.Sprintf("Failed to invoke chaincode. Got error: %s", err6.Error())
+			fmt.Printf(errStr)
+			return nil, errors.New(errStr)
+		}
+
+		fmt.Printf("Invoke chaincode successful. Got response %s", string(response2))
+
+		//Cargar Coins
+		coins = solesSubtotal //- coins
 		if coins < 0 {
-			coins = coins*-1
+			coins = coins * -1
 			f = "debitbalance"
 		} else {
 			f = "putbalance"
 		}
 	} else {
-		if solesSubtotal > 0 {  //Compra Soles
-			f = "putbalance"					
+		if solesSubtotal > 0 { //Compra Soles
+			f = "putbalance"
 			coins = solesTotal * change
-		}else if coins > 0 {  //Canje Coins
-			coinBalance,_ := strconv.ParseFloat(responseContract.Response, 64)
+		} else if coins > 0 { //Canje Coins
+			coinBalance, _ := strconv.ParseFloat(responseContract.Response, 64)
 			if coinBalance <= coins {
-				return nil,errors.New("El cliente no cuenta con coins suficientes")
+				return nil, errors.New("El cliente no cuenta con coins suficientes")
 			}
 			f = "debitbalance"
 		}
 	}
 
-	invokeArgs := util.ToChaincodeArgs(f, args[0], business, strconv.FormatFloat(coins,'f',6,64))
+	invokeArgs := util.ToChaincodeArgs(f, args[0], business, strconv.FormatFloat(coins, 'f', 6, 64))
 	response, err4 := stub.InvokeChaincode(walletContract, invokeArgs)
 	if err4 != nil {
 		errStr := fmt.Sprintf("Failed to invoke chaincode. Got error: %s", err4.Error())
@@ -209,7 +221,7 @@ func (t *SimpleChaincode) buy(stub shim.ChaincodeStubInterface, args []string) (
 
 func (t *SimpleChaincode) getBalance(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	fmt.Println("Vivanda----getBalance() is running----")
-	
+
 	if len(args) != 1 {
 		return nil, errors.New("Numero incorrecto de argumentos.Se espera 1 para getBalance")
 	}
@@ -227,14 +239,14 @@ func (t *SimpleChaincode) getBalance(stub shim.ChaincodeStubInterface, args []st
 
 	responseContract := ResponseContract{}
 	err1 := json.Unmarshal(response, &responseContract)
-	
+
 	fmt.Println(responseContract.Response)
 	if err1 != nil {
 		fmt.Println("Error parseando a Json" + args[0])
 		return nil, errors.New("Error retrieving Balance" + args[0])
 	}
-	
-	return []byte(fmt.Sprintf(`{"code":0,"response":"%s"}`,responseContract.Response)), nil
+
+	return []byte(fmt.Sprintf(`{"code":0,"response":"%s"}`, responseContract.Response)), nil
 }
 
 func safeRandom(dest []byte) {
