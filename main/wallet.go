@@ -214,6 +214,12 @@ func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []
 	if !ok {
 		return nil, errors.New("Fallo insertar Row with given key already exists")
 	}
+	
+	//Se envia un evento de exito
+	err = stub.SetEvent("createWallet", []byte("createWallet:OK"))
+	if err != nil {
+		return nil, errors.New("Fallo enviar el evento de Crear Wallet")
+	}
 
 	return []byte(`{"code":0,"response":null}`), nil
 }
@@ -282,6 +288,12 @@ func (t *SimpleChaincode) putBalance(stub shim.ChaincodeStubInterface, args []st
 	}
 	if !ok {
 		return nil, errors.New("Fallo insertar Row with given key already exists")
+	}
+	
+	//Se envia un evento de exito
+	err = stub.SetEvent("debitEvent", []byte("debitEvent:4"))
+	if err != nil {
+		return nil, errors.New("Fallo enviar el evento de debito")
 	}
 
 	return []byte(`{"code":0,"response":null}`), nil
