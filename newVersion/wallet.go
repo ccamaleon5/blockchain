@@ -234,7 +234,7 @@ func (t *SimpleChaincode) putBalance(stub shim.ChaincodeStubInterface, args []st
 	}
 
 	fmt.Printf("WalletId 1: %s\n", args[0])
-	fmt.Printf("Monto: %s\n", args[1])
+	fmt.Printf("Business: %s\n", args[1])
 	fmt.Printf("Monto: %s\n", args[2])
 
 	bytesWallet1, err1 := stub.GetState(args[0])
@@ -324,7 +324,8 @@ func (t *SimpleChaincode) debitBalance(stub shim.ChaincodeStubInterface, args []
 
 	amt, err := strconv.ParseFloat(args[2], 64)
 
-	walletReceiver.Amount = walletReceiver.Amount - amt //carga coins al balance
+	walletReceiver.Amount = walletReceiver.Amount - amt //debita coins del balance
+	walletReceiver.Limit = walletReceiver.Limit - amt
 
 	walletReceiverJSONasBytes, _ := json.Marshal(walletReceiver)
 	err = stub.PutState(args[0], walletReceiverJSONasBytes) //rewrite the wallet
@@ -540,7 +541,7 @@ func (t *SimpleChaincode) getBalance(stub shim.ChaincodeStubInterface, args []st
 		return nil, errors.New("Error retrieving Balance" + args[0])
 	}
 
-	return []byte(fmt.Sprintf(`{"code":0,"response":"%s"}`, strconv.FormatFloat(wallet.Amount, 'f', 6, 64))), nil
+	return []byte(fmt.Sprintf(`{"code":0,"balance":"%s","limit":"%s"}`, strconv.FormatFloat(wallet.Amount, 'f', 6, 64), strconv.FormatFloat(wallet.Limit, 'f', 6, 64))), nil
 }
 
 //Funcion que obtiene el total de Coins en el sistema
