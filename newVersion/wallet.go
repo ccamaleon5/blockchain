@@ -338,6 +338,25 @@ func (t *SimpleChaincode) putBalance(stub shim.ChaincodeStubInterface, args []st
 		return nil, errors.New("Fallo insertar Row with given key already exists")
 	}
 	
+	//Se actualiza el row de Wallet
+	var columns1 []*shim.Column
+	col10 := shim.Column{Value: &shim.Column_String_{String_: "Wallet"}}
+	col11 := shim.Column{Value: &shim.Column_String_{String_: col1Val}}
+	col12 := shim.Column{Value: &shim.Column_String_{String_: col4Val}}
+	
+	columns1 = append(columns, &col10)
+	columns1 = append(columns, &col11)
+	columns1 = append(columns, &col12)
+
+	row1 := shim.Row{Columns: columns1}
+	ok2, err2 := stub.ReplaceRow("Wallet",row1)
+	if err2 != nil {
+		return nil, fmt.Errorf("Insert Row Wallet operation failed. %s", err2)
+	}
+	if !ok2 {
+		return nil, errors.New("Fallo insertar Row Wallet with given key already exists")
+	}
+	
 	//Se envia un evento de exito
 	err = stub.SetEvent("debitEvent", []byte("debitEvent:4"))
 	if err != nil {
@@ -412,6 +431,27 @@ func (t *SimpleChaincode) debitBalance(stub shim.ChaincodeStubInterface, args []
 	if !ok {
 		return nil, errors.New("Fallo insertar Row with given key already exists")
 	}
+	
+	//Se actualiza el row de Wallet
+	var columns1 []*shim.Column
+	col10 := shim.Column{Value: &shim.Column_String_{String_: "Wallet"}}
+	col11 := shim.Column{Value: &shim.Column_String_{String_: col1Val}}
+	col12 := shim.Column{Value: &shim.Column_String_{String_: col4Val}}
+	
+	columns1 = append(columns, &col10)
+	columns1 = append(columns, &col11)
+	columns1 = append(columns, &col12)
+
+	row1 := shim.Row{Columns: columns1}
+	ok3, err3 := stub.ReplaceRow("Wallet",row1)
+	if err3 != nil {
+		return nil, fmt.Errorf("Insert Row Wallet operation failed. %s", err3)
+	}
+	if !ok3 {
+		return nil, errors.New("Fallo insertar Row Wallet with given key already exists")
+	}
+	
+	//Se actualiza el balance global de coin
 	
 	coinBalance, err2 := stub.GetState("coinBalance")
 	fmt.Println(coinBalance)
