@@ -344,9 +344,9 @@ func (t *SimpleChaincode) putBalance(stub shim.ChaincodeStubInterface, args []st
 	col11 := shim.Column{Value: &shim.Column_String_{String_: col1Val}}
 	col12 := shim.Column{Value: &shim.Column_String_{String_: col4Val}}
 	
-	columns1 = append(columns, &col10)
-	columns1 = append(columns, &col11)
-	columns1 = append(columns, &col12)
+	columns1 = append(columns1, &col10)
+	columns1 = append(columns1, &col11)
+	columns1 = append(columns1, &col12)
 
 	row1 := shim.Row{Columns: columns1}
 	ok2, err2 := stub.ReplaceRow("Wallet",row1)
@@ -438,9 +438,9 @@ func (t *SimpleChaincode) debitBalance(stub shim.ChaincodeStubInterface, args []
 	col11 := shim.Column{Value: &shim.Column_String_{String_: col1Val}}
 	col12 := shim.Column{Value: &shim.Column_String_{String_: col4Val}}
 	
-	columns1 = append(columns, &col10)
-	columns1 = append(columns, &col11)
-	columns1 = append(columns, &col12)
+	columns1 = append(columns1, &col10)
+	columns1 = append(columns1, &col11)
+	columns1 = append(columns1, &col12)
 
 	row1 := shim.Row{Columns: columns1}
 	ok3, err3 := stub.ReplaceRow("Wallet",row1)
