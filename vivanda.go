@@ -18,12 +18,12 @@ import (
 	"encoding/hex"
 )
 
-const business string = "Cineplanet"
+const business string = "Vivanda"
 const walletContract string = "b2a6d8acbb81e442555d94daa803ba0130218cfacf70d2bbd94b75349558bac10b70289b40f665dfc83adfab56fbf060edaa72b9f9c77abfb950dff30e003cae"
-const change float64 = 1
+const change float64 = 2
 
 const (
-	tableColumn     = "CanjesCineplanet"
+	tableColumn     = "CanjesVivanda"
 	columnTime      = "Time"
 	columnAccountID = "Account"
 	columnAmount    = "Amount"
@@ -83,10 +83,10 @@ type SimpleChaincode struct {
 }
 
 func main() {
-	fmt.Printf("Iniciandooo Contrato Cineplanet....")
+	fmt.Printf("Iniciandooo Contrato Vivanda....")
 	err := shim.Start(new(SimpleChaincode))
 	if err != nil {
-		fmt.Printf("Error Iniciando Cineplanet Smart Contract: %s", err)
+		fmt.Printf("Error Iniciando Vivanda Smart Contract: %s", err)
 	}
 }
 
@@ -153,8 +153,12 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 	// Manejar diferentes funciones
 	if function == "getbalance" {
 		return t.getBalance(stub, args)
-	} else if function == "gettotalcoin" {
+	} else{ 
+		if function == "gettotalcoin" {
 			return t.getTotalCoin(stub, args)
+		} else if function == "getmovimientos" {
+			return t.getMovimientos(stub, args)
+		}
 	}
 	
 	fmt.Println("query no encuentra la funcion: " + function)
