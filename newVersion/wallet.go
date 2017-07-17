@@ -728,9 +728,13 @@ func (t *SimpleChaincode) getMovimientos(stub shim.ChaincodeStubInterface, args 
 	fmt.Println("wallet id is ")
 	fmt.Println(walletId)
 	var columns []shim.Column
-	col1 := shim.Column{Value: &shim.Column_String_{String_: walletId}}
-	columns = append(columns, col1)
-
+	col0 := shim.Column{Value: &shim.Column_String_{String_: "Movement"}}
+	columns = append(columns, col0)
+	if len(args) == 2 {
+		col1 := shim.Column{Value: &shim.Column_String_{String_: walletId}}
+		columns = append(columns, col1)
+	}
+	
 	rowChannel, err := stub.GetRows("Movimientos", columns)
 	if err != nil {
 		return nil, fmt.Errorf("getRowTableOne operation failed. %s", err)
