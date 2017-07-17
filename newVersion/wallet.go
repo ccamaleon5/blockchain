@@ -720,17 +720,17 @@ func (t *SimpleChaincode) debitTotalCoin(stub shim.ChaincodeStubInterface, args 
 func (t *SimpleChaincode) getMovimientos(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	fmt.Println("Call----getMovimientos() is running----")
 
-	if len(args) != 1 {
+	if len(args) < 1 {
 		return nil, errors.New("Incorrecto numero de argumentos. Se esperaba 1")
 	}
 
-	walletId := args[0] // wallet id
-	fmt.Println("wallet id is ")
-	fmt.Println(walletId)
 	var columns []shim.Column
 	col0 := shim.Column{Value: &shim.Column_String_{String_: "Movement"}}
 	columns = append(columns, col0)
 	if len(args) == 2 {
+		walletId := args[1] // wallet id
+		fmt.Println("wallet id is ")
+		fmt.Println(walletId)
 		col1 := shim.Column{Value: &shim.Column_String_{String_: walletId}}
 		columns = append(columns, col1)
 	}
@@ -748,9 +748,9 @@ func (t *SimpleChaincode) getMovimientos(stub shim.ChaincodeStubInterface, args 
 				rowChannel = nil
 			} else {
 				columnas := row.GetColumns()
-				amountRow, _ := strconv.ParseFloat(columnas[3].GetString_(), 64)
-				balanceRow, _ := strconv.ParseFloat(columnas[4].GetString_(), 64)
-				movimiento := Movement{Time: columnas[1].GetInt64(), WalletId: columnas[0].GetString_(), Business: columnas[2].GetString_(), Amount: amountRow, Balance: balanceRow, Type: columnas[5].GetString_()}
+				amountRow, _ := strconv.ParseFloat(columnas[4].GetString_(), 64)
+				balanceRow, _ := strconv.ParseFloat(columnas[5].GetString_(), 64)
+				movimiento := Movement{Time: columnas[2].GetInt64(), WalletId: columnas[1].GetString_(), Business: columnas[3].GetString_(), Amount: amountRow, Balance: balanceRow, Type: columnas[6].GetString_()}
 
 				movimientos = append(movimientos, movimiento)
 			}
