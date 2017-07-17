@@ -18,12 +18,12 @@ import (
 	"encoding/hex"
 )
 
-const business string = "Vivanda"
+const business string = "Cineplanet"
 const walletContract string = "b2a6d8acbb81e442555d94daa803ba0130218cfacf70d2bbd94b75349558bac10b70289b40f665dfc83adfab56fbf060edaa72b9f9c77abfb950dff30e003cae"
-const change float64 = 2
+const change float64 = 1
 
 const (
-	tableColumn     = "CanjesVivanda"
+	tableColumn     = "CanjesCineplanet"
 	columnTime      = "Time"
 	columnAccountID = "Account"
 	columnAmount    = "Amount"
@@ -83,10 +83,10 @@ type SimpleChaincode struct {
 }
 
 func main() {
-	fmt.Printf("Iniciandooo Contrato Vivanda....")
+	fmt.Printf("Iniciandooo Contrato Cineplanet....")
 	err := shim.Start(new(SimpleChaincode))
 	if err != nil {
-		fmt.Printf("Error Iniciando Vivanda Smart Contract: %s", err)
+		fmt.Printf("Error Iniciando Cineplanet Smart Contract: %s", err)
 	}
 }
 
