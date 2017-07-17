@@ -74,7 +74,8 @@ type Balance struct{
 //Response - Structure for response
 type ResponseContract struct {
 	Code     int32  `json:"code"`
-	Response string `json:"response"`
+	Balance string `json:"balance"`
+	Limit string `json:"limit"`
 }
 
 // SimpleChaincode example simple Chaincode implementation
@@ -222,8 +223,7 @@ func (t *SimpleChaincode) buy(stub shim.ChaincodeStubInterface, args []string) (
 
 	//Compra soles subtotal y canje coins
 	if solesSubtotal > 0 && coins > 0 {
-
-		coinBalance, _ := strconv.ParseFloat(responseContract.Response, 64)
+		coinBalance, _ := strconv.ParseFloat(responseContract.Balance, 64)
 
 		if coinBalance <= coins {
 			return nil, errors.New("El cliente no cuenta con coins suficientes")
@@ -255,7 +255,7 @@ func (t *SimpleChaincode) buy(stub shim.ChaincodeStubInterface, args []string) (
 			f = "putbalance"
 			coins = solesTotal * change
 		} else if coins > 0 { //Canje Coins
-			coinBalance, _ := strconv.ParseFloat(responseContract.Response, 64)
+			coinBalance, _ := strconv.ParseFloat(responseContract.Balance, 64)
 			if coinBalance <= coins {
 				return nil, errors.New("El cliente no cuenta con coins suficientes")
 			}
@@ -278,6 +278,8 @@ func (t *SimpleChaincode) buy(stub shim.ChaincodeStubInterface, args []string) (
 	} else{
 		insertRow(stub,strconv.FormatFloat(coins, 'f', 6, 64),"C")
 	}
+	
+	coins,_ = strconv.ParseFloat(args[2], 64)
 	
 	if false == updateBalance(stub, coins, solesSubtotal) {
 		errStr := fmt.Sprintf("Failed update balance")
@@ -308,26 +310,35 @@ func (t *SimpleChaincode) getBalance(stub shim.ChaincodeStubInterface, args []st
 	responseContract := ResponseContract{}
 	err1 := json.Unmarshal(response, &responseContract)
 
-	fmt.Println(responseContract.Response)
+	fmt.Println(responseContract.Balance)
 	if err1 != nil {
 		fmt.Println("Error parseando a Json" + args[0])
 		return nil, errors.New("Error retrieving Balance" + args[0])
 	}
 
-	return []byte(fmt.Sprintf(`{"code":0,"response":"%s"}`, responseContract.Response)), nil
+	return []byte(fmt.Sprintf(`{"code":0,"balance":"%s","limit":"%s"}`, responseContract.Balance,responseContract.Limit)), nil
 }
 
 func (t *SimpleChaincode) getTotalCoin(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	fmt.Println("Call----getTotalCoin() is running----")
 
-	coinBalance, err := stub.GetState("coinBalance")
-	fmt.Println(coinBalance)
+	bytesWallet1, err1 := stub.GetState("coinBalance")
+
+	balance := Balance{}
+	err := json.Unmarshal(bytesWallet1, &balance)
 	if err != nil {
-		fmt.Println("Error retrieving coinBalance")
+		fmt.Println("Error TotalCoin parsing")
+		return nil, errors.New("Error marshaling totalBalance")
+	}
+	
+
+	fmt.Println(balance)
+	if err1 != nil {
+		fmt.Println("Error retrieving balance")
 		return nil, errors.New("Error retrieving coinBalance")
 	}
 
-	return []byte(fmt.Sprintf(`{"code":0,"response":"%s"}`, coinBalance)), nil
+	return []byte(fmt.Sprintf(`{"business":"%s","balance":%v,"spend":%v,"sents":%v}`, balance.Business,balance.Total,balance.Exchange,balance.Send)), nil
 }
 
 //Obtener los movimientos de los coins en Vivanda
