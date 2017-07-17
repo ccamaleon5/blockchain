@@ -18,6 +18,7 @@ import (
 
 const (
 	tableColumn     = "Movimientos"
+	columnWallet    = "Wallet"
 	columnTime      = "Time"
 	columnAccountID = "Account"
 	columnBusiness  = "Business"
@@ -99,6 +100,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	}
 
 	stub.CreateTable(tableColumn, []*shim.ColumnDefinition{
+			&shim.ColumnDefinition{Name: columnWallet, Type: shim.ColumnDefinition_STRING, Key: true},
 		&shim.ColumnDefinition{Name: columnAccountID, Type: shim.ColumnDefinition_STRING, Key: true},
 		&shim.ColumnDefinition{Name: columnTime, Type: shim.ColumnDefinition_INT64, Key: true},
 		&shim.ColumnDefinition{Name: columnBusiness, Type: shim.ColumnDefinition_STRING, Key: false},
@@ -218,12 +220,14 @@ func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []
 	col5Val := "W"
 
 	var columns []*shim.Column
+	col6 := shim.Column{Value: &shim.Column_String_{String_: "Movement"}}
 	col0 := shim.Column{Value: &shim.Column_String_{String_: col1Val}}
 	col1 := shim.Column{Value: &shim.Column_Int64{Int64: a}}
 	col2 := shim.Column{Value: &shim.Column_String_{String_: col2Val}}
 	col3 := shim.Column{Value: &shim.Column_String_{String_: col3Val}}
 	col4 := shim.Column{Value: &shim.Column_String_{String_: col3Val}}
 	col5 := shim.Column{Value: &shim.Column_String_{String_: col5Val}}
+	columns = append(columns, &col6)
 	columns = append(columns, &col0)
 	columns = append(columns, &col1)
 	columns = append(columns, &col2)
@@ -316,12 +320,14 @@ func (t *SimpleChaincode) putBalance(stub shim.ChaincodeStubInterface, args []st
 	col5Val := "C"
 
 	var columns []*shim.Column
+	col6 := shim.Column{Value: &shim.Column_String_{String_: "Movement"}}
 	col0 := shim.Column{Value: &shim.Column_String_{String_: col1Val}}
 	col1 := shim.Column{Value: &shim.Column_Int64{Int64: a}}
 	col2 := shim.Column{Value: &shim.Column_String_{String_: col2Val}}
 	col3 := shim.Column{Value: &shim.Column_String_{String_: col3Val}}
 	col4 := shim.Column{Value: &shim.Column_String_{String_: col4Val}}
 	col5 := shim.Column{Value: &shim.Column_String_{String_: col5Val}}
+	columns = append(columns, &col6)
 	columns = append(columns, &col0)
 	columns = append(columns, &col1)
 	columns = append(columns, &col2)
@@ -410,12 +416,14 @@ func (t *SimpleChaincode) debitBalance(stub shim.ChaincodeStubInterface, args []
 	col5Val := "D"
 
 	var columns []*shim.Column
+	col6 := shim.Column{Value: &shim.Column_String_{String_: "Movement"}}
 	col0 := shim.Column{Value: &shim.Column_String_{String_: col1Val}}
 	col1 := shim.Column{Value: &shim.Column_Int64{Int64: a}}
 	col2 := shim.Column{Value: &shim.Column_String_{String_: col2Val}}
 	col3 := shim.Column{Value: &shim.Column_String_{String_: col3Val}}
 	col4 := shim.Column{Value: &shim.Column_String_{String_: col4Val}}
 	col5 := shim.Column{Value: &shim.Column_String_{String_: col5Val}}
+	columns = append(columns, &col6)
 	columns = append(columns, &col0)
 	columns = append(columns, &col1)
 	columns = append(columns, &col2)
@@ -536,12 +544,14 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 
 		var columns []*shim.Column
 		var columns2 []*shim.Column
+		col6 := shim.Column{Value: &shim.Column_String_{String_: "Movement"}}
 		col0 := shim.Column{Value: &shim.Column_String_{String_: col1Val}}
 		col1 := shim.Column{Value: &shim.Column_Int64{Int64: a}}
 		col2 := shim.Column{Value: &shim.Column_String_{String_: col2Val}}
 		col3 := shim.Column{Value: &shim.Column_String_{String_: col3Val}}
 		col4 := shim.Column{Value: &shim.Column_String_{String_: col4Val}}
 		col5 := shim.Column{Value: &shim.Column_String_{String_: col5Val}}
+		columns = append(columns, &col6)
 		columns = append(columns, &col0)
 		columns = append(columns, &col1)
 		columns = append(columns, &col2)
@@ -560,7 +570,27 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 		}
 
 		fmt.Println("Inserto Fila de Sender")
+		
+		//Se actualiza el row de Wallet Sender
+		var columns1 []*shim.Column
+		col10 := shim.Column{Value: &shim.Column_String_{String_: "Wallet"}}
+		col11 := shim.Column{Value: &shim.Column_String_{String_: col1Val}}
+		col12 := shim.Column{Value: &shim.Column_String_{String_: col4Val}}
+	
+		columns1 = append(columns1, &col10)
+		columns1 = append(columns1, &col11)
+		columns1 = append(columns1, &col12)
+	
+		row1 := shim.Row{Columns: columns1}
+		ok3, err3 := stub.ReplaceRow("Wallet",row1)
+		if err3 != nil {
+			return nil, fmt.Errorf("Insert Row Wallet operation failed. %s", err3)
+		}
+		if !ok3 {
+			return nil, errors.New("Fallo insertar Row Wallet with given key already exists")
+		}
 
+		//Se inserta fila de Receiver
 		b := a+1
 		
 		fmt.Printf("Time: %d \n", b)
@@ -577,7 +607,7 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 		col3 = shim.Column{Value: &shim.Column_String_{String_: col3Val}}
 		col4 = shim.Column{Value: &shim.Column_String_{String_: col4Val}}
 		col5 = shim.Column{Value: &shim.Column_String_{String_: col5Val}}
-
+		columns2 = append(columns2, &col6)
 		columns2 = append(columns2, &col0)
 		columns2 = append(columns2, &col1)
 		columns2 = append(columns2, &col2)
@@ -596,6 +626,25 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 		}
 
 		fmt.Println("Inserto fila de receiver")
+		
+		//Se actualiza el row de Wallet Receiver
+		var columns3 []*shim.Column
+		col20 := shim.Column{Value: &shim.Column_String_{String_: "Wallet"}}
+		col21 := shim.Column{Value: &shim.Column_String_{String_: col1Val}}
+		col22 := shim.Column{Value: &shim.Column_String_{String_: col4Val}}
+	
+		columns3 = append(columns3, &col20)
+		columns3 = append(columns3, &col21)
+		columns3 = append(columns3, &col22)
+	
+		row3 := shim.Row{Columns: columns3}
+		ok4, err4 := stub.ReplaceRow("Wallet",row3)
+		if err4 != nil {
+			return nil, fmt.Errorf("Insert Row Wallet operation failed. %s", err4)
+		}
+		if !ok4 {
+			return nil, errors.New("Fallo insertar Row Wallet with given key already exists")
+		}
 
 		return []byte(`{"code":0,"response":null}`), nil
 	} else {
