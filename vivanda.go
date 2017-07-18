@@ -19,7 +19,7 @@ import (
 )
 
 const business string = "Vivanda"
-const walletContract string = "b2a6d8acbb81e442555d94daa803ba0130218cfacf70d2bbd94b75349558bac10b70289b40f665dfc83adfab56fbf060edaa72b9f9c77abfb950dff30e003cae"
+const walletContract string = "220bae122353d617087a373456ea880fd6a18ed72cd6a5c71ef0447d9eb6e8250e5dda3a98872ca449264598202586e7d007db15cf03754c0d7be8a61f501d8c"
 const change float64 = 2
 
 const (
@@ -102,6 +102,19 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 		fmt.Println("Error Float parsing")
 		return nil, errors.New("Error marshaling wallet")
 	}
+	
+	//Adquirir coins iniciales
+	f := "debittotalcoin"
+	invokeArgs := util.ToChaincodeArgs(f, args[0])
+	response, err := stub.InvokeChaincode(walletContract, invokeArgs)
+	
+	if err != nil {
+		errStr := fmt.Sprintf("Failed to invoke chaincode. Got error: %s", err.Error())
+		fmt.Printf(errStr)
+		return nil, errors.New(errStr)
+	}
+
+	fmt.Printf("Invoke chaincode successful. Got response %s", string(response))
 	
 	balance := Balance{
 		Business: "Vivanda",
@@ -188,7 +201,7 @@ func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []
 	return nil, nil
 }
 
-// createWallet - invocar esta funcion para crear un wallet con saldo inicial
+// createWallet - invocar esta funcion para compras y canjes de coins
 func (t *SimpleChaincode) buy(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	fmt.Println("Vivanda Call---Funcion Buy---")
 
