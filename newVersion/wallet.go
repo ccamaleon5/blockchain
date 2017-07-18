@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
+	"github.com/jasonlvhit/gocron"
 
 	"crypto/rand"
 	"encoding/hex"
@@ -114,6 +115,12 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 		&shim.ColumnDefinition{Name: columnAccountID, Type: shim.ColumnDefinition_STRING, Key: true},
 		&shim.ColumnDefinition{Name: columnBalance, Type: shim.ColumnDefinition_STRING, Key: false},
 	})
+	
+	fmt.Printf("Iniciandooo Job de reinicio de limite")
+	
+	s := gocron.NewScheduler()
+	s.Every(60).Seconds().Do(resetLimit(stub))
+	<- s.Start()
 
 	return nil, nil
 }
@@ -881,6 +888,24 @@ func (t *SimpleChaincode) getDatos(stub shim.ChaincodeStubInterface, args []stri
 	}
 
 	return bytes, nil
+}
+
+//resetea los limites de los wallets
+func resetLimit(stub shim.ChaincodeStubInterface) bool{
+	fmt.Println("--------LLamando JOBBBB----------")
+	//var params = []string{"Wallet"}
+	bytes, err := stub.GetState("42928586")
+	if err != nil {
+		fmt.Println("Error retrieving")
+	}
+	wallet := Wallet{}
+	err1 := json.Unmarshal(bytes, &wallet)
+	if err1 != nil {
+		fmt.Println("Error retrieving")
+	}
+	fmt.Println("Retorno: %s",wallet.Id)
+	
+	return true
 }
 
 func safeRandom(dest []byte) {
