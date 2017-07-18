@@ -141,8 +141,12 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 				} else {
 					if function == "puttotalcoin" {
 						return t.putTotalCoin(stub, args)
-					} else if function == "debittotalcoin" {
-						return t.debitTotalCoin(stub, args)
+					} else { 
+						if function == "debittotalcoin" {
+							return t.debitTotalCoin(stub, args)
+						} else if function == "reset"{
+							return t.reset(stub, args)	
+						}
 					}
 				}
 			}
@@ -890,7 +894,7 @@ func (t *SimpleChaincode) getDatos(stub shim.ChaincodeStubInterface, args []stri
 }
 
 
-//Job que reinica los limites
+//Reinica los limites
 func (t *SimpleChaincode) reset(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	fmt.Println("Call----Reset() is running----")
 	
