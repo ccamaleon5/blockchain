@@ -19,7 +19,7 @@ import (
 )
 
 const business string = "Inkafarma"
-const walletContract string = "220bae122353d617087a373456ea880fd6a18ed72cd6a5c71ef0447d9eb6e8250e5dda3a98872ca449264598202586e7d007db15cf03754c0d7be8a61f501d8c"
+const walletContract string = "095fb94438b9baa981095b175e7d93b20a3b7fdb91c825bf3cc7b85a5265427c3ad5cdde04cdac73216d6c9e9779fb050efc6404ef0223ebef8f366b39ff299d"
 const change float64 = 3
 
 const (
