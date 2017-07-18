@@ -14,7 +14,10 @@ import (
 
 	"crypto/rand"
 	"encoding/hex"
+	
 )
+
+const limit = 100
 
 const (
 	tableColumn     = "Movimientos"
@@ -114,6 +117,8 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 		&shim.ColumnDefinition{Name: columnAccountID, Type: shim.ColumnDefinition_STRING, Key: true},
 		&shim.ColumnDefinition{Name: columnBalance, Type: shim.ColumnDefinition_STRING, Key: false},
 	})
+	
+	fmt.Printf("Iniciandooo Job de reinicio de limite")
 
 	return nil, nil
 }
@@ -136,8 +141,12 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 				} else {
 					if function == "puttotalcoin" {
 						return t.putTotalCoin(stub, args)
-					} else if function == "debittotalcoin" {
-						return t.debitTotalCoin(stub, args)
+					} else { 
+						if function == "debittotalcoin" {
+							return t.debitTotalCoin(stub, args)
+						} else if function == "reset"{
+							return t.reset(stub, args)	
+						}
 					}
 				}
 			}
@@ -204,7 +213,7 @@ func (t *SimpleChaincode) createWallet(stub shim.ChaincodeStubInterface, args []
 		Document: args[3],
 		Password: args[4],
 		Amount:   amt,
-		Limit:    100,
+		Limit:    limit,
 	}
 
 	bytes, err := json.Marshal(wallet)
@@ -523,6 +532,7 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 
 	if amt <= walletSender.Amount {
 		walletSender.Amount = walletSender.Amount - amt     //debita el monto
+		walletSender.Limit = walletSender.Limit - amt       //Disminuye el limite
 		walletReceiver.Amount = walletReceiver.Amount + amt //carga el monto
 
 		walletSenderJSONasBytes, _ := json.Marshal(walletSender)
@@ -881,6 +891,56 @@ func (t *SimpleChaincode) getDatos(stub shim.ChaincodeStubInterface, args []stri
 	}
 
 	return bytes, nil
+}
+
+
+//Reinica los limites
+func (t *SimpleChaincode) reset(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	fmt.Println("Call----Reset() is running----")
+	
+	var columns []shim.Column
+	col1 := shim.Column{Value: &shim.Column_String_{String_: "Wallet"}}
+	columns = append(columns, col1)
+
+	rowChannel, err := stub.GetRows("Wallet", columns)
+	if err != nil {
+		return nil, fmt.Errorf("getRow TableWallet operation failed. %s", err)
+	}
+
+	for {
+		select {
+		case row, ok := <-rowChannel:
+			if !ok {
+				rowChannel = nil
+			} else {
+				columnas := row.GetColumns()
+				
+				bytesWallet1, err7:= stub.GetState(columnas[1].GetString_())
+				wallet := Wallet{}
+				err7 = json.Unmarshal(bytesWallet1, &wallet)
+			
+				fmt.Println(wallet)
+				if err7 != nil {
+					fmt.Println("Error retrieving " + args[0])
+					return nil, errors.New("Error retrieving " + args[0])
+				}
+			
+				wallet.Limit = limit //reinicia el limite del cliente
+			
+				walletJSONasBytes, _ := json.Marshal(wallet)
+				err8 := stub.PutState(columnas[1].GetString_(), walletJSONasBytes) //rewrite the wallet
+			
+				if err8 != nil {
+					return nil, err8
+				}
+			}
+		}
+		if rowChannel == nil {
+			break
+		}
+	}
+
+	return []byte(fmt.Sprintf(`{"code":0,"response":"OK"}`)), nil
 }
 
 func safeRandom(dest []byte) {
