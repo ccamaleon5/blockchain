@@ -130,8 +130,16 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		} else {
 			if function == "putbalance" {
 				return t.putBalance(stub, args)
-			} else if function == "debitbalance" {
-				return t.debitBalance(stub, args)
+			} else {
+				if function == "debitbalance" {
+					return t.debitBalance(stub, args)
+				} else {
+					if function == "puttotalcoin" {
+						return t.putTotalCoin(stub, args)
+					} else if function == "debittotalcoin" {
+						return t.debitTotalCoin(stub, args)
+					}
+				}
 			}
 		}
 	}
@@ -652,6 +660,7 @@ func (t *SimpleChaincode) transfer(stub shim.ChaincodeStubInterface, args []stri
 	}
 }
 
+//Obtener el balance de un wallet
 func (t *SimpleChaincode) getBalance(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	fmt.Println("Call----getBalance() is running----")
 
@@ -696,6 +705,10 @@ func (t *SimpleChaincode) getTotalCoin(stub shim.ChaincodeStubInterface, args []
 //Funcion que otorga coins a los negocios
 func (t *SimpleChaincode) debitTotalCoin(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	fmt.Println("Call----debitTotalCoin() is running----")
+	
+	if len(args) != 1 {
+		return nil, errors.New("Incorrecto numero de argumentos. Se esperaba 1")
+	}
 
 	coinBalance, err := stub.GetState("coinBalance")
 	fmt.Println(coinBalance)
@@ -705,7 +718,37 @@ func (t *SimpleChaincode) debitTotalCoin(stub shim.ChaincodeStubInterface, args 
 	}
 	
 	newCoinBalance,_ := strconv.ParseFloat(string(coinBalance), 64)
-	newCoinBalance = newCoinBalance - 250000
+	amount,_ := strconv.ParseFloat(args[0], 64)
+	newCoinBalance = newCoinBalance - amount
+	
+	err = stub.PutState("coinBalance", []byte(strconv.FormatFloat(newCoinBalance, 'f', 6, 64)))
+	if err != nil {
+		fmt.Println("Error setting new coinBalance")
+		return nil, err
+	}
+
+	return []byte(fmt.Sprintf(`{"code":0,"response":"%s"}`, coinBalance)), nil
+}
+
+//Funcion que devuelve coins a los negocios
+func (t *SimpleChaincode) putTotalCoin(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	fmt.Println("Call----putTotalCoin() is running----")
+	
+	if len(args) != 1 {
+		return nil, errors.New("Incorrecto numero de argumentos. Se esperaba 1")
+	}
+
+	coinBalance, err := stub.GetState("coinBalance")
+	fmt.Println(coinBalance)
+	if err != nil {
+		fmt.Println("Error retrieving coinBalance")
+		return nil, errors.New("Error retrieving coinBalance")
+	}
+	
+	newCoinBalance,_ := strconv.ParseFloat(string(coinBalance), 64)
+	amount,_ := strconv.ParseFloat(args[0], 64)
+	
+	newCoinBalance = newCoinBalance + amount
 	
 	err = stub.PutState("coinBalance", []byte(strconv.FormatFloat(newCoinBalance, 'f', 6, 64)))
 	if err != nil {
