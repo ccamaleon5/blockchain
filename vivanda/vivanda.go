@@ -505,7 +505,7 @@ func (t *SimpleChaincode) getCoins(stub shim.ChaincodeStubInterface, args []stri
 	fmt.Println(balance)
 	if err2 != nil {
 		fmt.Println("Error retrieving balance")
-		return false
+		return nil, errors.New("Error")
 	}
  
 	balance.Total = balance.Total + amt
