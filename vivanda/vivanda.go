@@ -515,7 +515,7 @@ func (t *SimpleChaincode) getCoins(stub shim.ChaincodeStubInterface, args []stri
 
 	if err != nil {
 		fmt.Printf("Error actualizando el balance del negocio")
-		return false
+		return nil, errors.New("Error")
 	}
 	
 	return nil, nil
