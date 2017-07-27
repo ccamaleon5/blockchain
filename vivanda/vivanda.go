@@ -151,8 +151,12 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 
 	if function == "createwallet" {
 		return t.createWallet(stub, args)
-	} else if function == "buy" {
-		return t.buy(stub, args)
+	} else{ 
+		if function == "buy" {
+			return t.buy(stub, args)
+		} else if function == "getcoins" {
+			return t.getCoins(stub, args)
+		}
 	}
 	fmt.Println("invoke no encuentra la funcion: " + function)
 
@@ -462,6 +466,59 @@ func updateBalance(stub shim.ChaincodeStubInterface, coins float64, subtotalSole
 	}
 
 	return true
+}
+
+//Obtener los movimientos de los coins en Vivanda
+func (t *SimpleChaincode) getCoins(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	fmt.Println("Call----getCoins() is running----")
+
+	if len(args) != 1 {
+		return nil, errors.New("Incorrecto numero de argumentos. Se esperaba 1")
+	}
+
+	amt, err := strconv.ParseFloat(args[0], 64)
+
+	if err != nil {
+		fmt.Println("Error Float parsing")
+		return nil, errors.New("Error marshaling wallet")
+	}
+	
+	//Adquirir coins adicionales
+	f := "debittotalcoin"
+	invokeArgs := util.ToChaincodeArgs(f, args[0])
+	response, err1 := stub.InvokeChaincode(walletContract, invokeArgs)
+	
+	if err1 != nil {
+		errStr := fmt.Sprintf("Failed to invoke chaincode. Got error: %s", err.Error())
+		fmt.Printf(errStr)
+		return nil, errors.New(errStr)
+	}
+
+	fmt.Printf("Invoke chaincode successful. Got response %s", string(response))
+	
+	//Cambiar el balance
+	bytesWallet1, err2 := stub.GetState("coinBalance")
+
+	balance := Balance{}
+	err3 := json.Unmarshal(bytesWallet1, &balance)
+
+	fmt.Println(balance)
+	if err2 != nil {
+		fmt.Println("Error retrieving balance")
+		return false
+	}
+ 
+	balance.Total = balance.Total + amt
+
+	balanceJSONasBytes, _ := json.Marshal(balance)
+	err = stub.PutState("coinBalance", balanceJSONasBytes) //rewrite the wallet
+
+	if err != nil {
+		fmt.Printf("Error actualizando el balance del negocio")
+		return false
+	}
+	
+	return nil, nil
 }
 
 func safeRandom(dest []byte) {
