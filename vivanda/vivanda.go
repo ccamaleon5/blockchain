@@ -501,7 +501,11 @@ func (t *SimpleChaincode) getCoins(stub shim.ChaincodeStubInterface, args []stri
 
 	balance := Balance{}
 	err3 := json.Unmarshal(bytesWallet1, &balance)
-
+	if err3 != nil {
+		fmt.Println("Error parsing json")
+		return nil, errors.New("Error unmarshaling wallet")
+	}
+	
 	fmt.Println(balance)
 	if err2 != nil {
 		fmt.Println("Error retrieving balance")
